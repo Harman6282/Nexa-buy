@@ -1,8 +1,17 @@
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
+import { LoginSchema, SignUpSchema } from "../schema/users";
 
-export const signup = async (req: Request, res: Response) => {
+export const signup: any = async (req: Request, res: Response) => {
   try {
-    const body = req.body;
+    const parsed = SignUpSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Invalid request body",
+        errors: parsed.error.errors,
+      });
+    }
+    const body = parsed.data;
 
     res.status(200).json({
       body,
@@ -13,9 +22,17 @@ export const signup = async (req: Request, res: Response) => {
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login: any = async (req: Request, res: Response) => {
   try {
-    const body = req.body;
+    const parsed = LoginSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Invalid request body",
+        errors: parsed.error.errors,
+      });
+    }
+    const body = parsed.data;
 
     res.status(200).json({
       body,
