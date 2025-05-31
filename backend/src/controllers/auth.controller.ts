@@ -1,7 +1,17 @@
 import { Request, RequestHandler, Response } from "express";
 import { LoginSchema, SignUpSchema } from "../schema/users";
-
+import { prisma } from "..";
+import bcryptjs from "bcryptjs";
+import { generateToken } from "../utils/generateToken";
 export const signup: any = async (req: Request, res: Response) => {
+  // * 1. Validate the request body using Zod schema
+  // *  2. find the user in the database
+  // 3. if new user, create a new user in the database
+  // 4. generate a JWT token
+  // 5. send the token in the response
+  // 6. set the token in a cookie with httpOnly and secure flags
+  // 7. return the user data in the response
+
   try {
     const parsed = SignUpSchema.safeParse(req.body);
 
@@ -13,8 +23,34 @@ export const signup: any = async (req: Request, res: Response) => {
     }
     const body = parsed.data;
 
+    const existinguser = await prisma.user.findUnique({
+      where: {
+        email: body.email,
+      }
+    })
+
+    if (existinguser) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
+
+    const hashedPassword =  bcryptjs.hashSync(body.password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        name: body.name,
+        email: body.email,
+        password: hashedPassword
+      }
+    })
+
+    if(user) {
+      generateToken(user, res)
+    }
+
     res.status(200).json({
-      body,
+      user
     });
   } catch (error) {
     console.log(error);

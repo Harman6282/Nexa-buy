@@ -3,14 +3,14 @@ dotenv.config();
 import express from "express";
 import rootRouter from "./routes";
 import { PORT } from "./secrets";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/prisma/client";
 import { log } from "console";
 
 const app = express();
 
 app.use(express.json());
 
-export const prisma = PrismaClient({
+export const prisma = new PrismaClient({
   log: ["query"]
 })
 
