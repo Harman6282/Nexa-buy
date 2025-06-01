@@ -81,11 +81,10 @@ export const login: any = async (req: Request, res: Response) => {
   res.status(200).json(new ApiResponse(200, user, "Logged in"));
 };
 
-
 export const authenticateTest = (req: Request, res: Response) => {
   const user = req.user;
   res.status(200).json(new ApiResponse(200, user, " user Test successful"));
-}
+};
 export const adminTest = (req: Request, res: Response) => {
   res.status(200).json(new ApiResponse(200, {}, "admin Test successful"));
-}
+};

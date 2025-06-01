@@ -32,3 +32,13 @@ export const authenticate = (
     throw new ApiError(401, "Unauthorized", ["Invalid token"]);
   }
 };
+
+export const adminCheck = (req: Request, res: Response, next: NextFunction) => {
+  if ((req?.user as JwtPayload).role !== "ADMIN") {
+    throw new ApiError(403, "Unauthorized", [
+      "You are not authorized to access this resource",
+    ]);
+  }
+
+  next();
+};

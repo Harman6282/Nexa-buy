@@ -7,6 +7,7 @@ export const generateToken: any = (user: any, res: Response) => {
     {
       id: user.id,
       email: user.email,
+      role: user.role,
     },
     JWT_SECRET!,
     {

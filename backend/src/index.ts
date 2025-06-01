@@ -18,7 +18,6 @@ export const prisma = new PrismaClient({
   log: ["query"],
 });
 
-
 app.use("/api", rootRouter);
 
 app.use(errorHandler);
