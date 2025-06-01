@@ -88,3 +88,12 @@ export const authenticateTest = (req: Request, res: Response) => {
 export const adminTest = (req: Request, res: Response) => {
   res.status(200).json(new ApiResponse(200, {}, "admin Test successful"));
 };
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+  res.status(200).json(new ApiResponse(200, {}, "Logged out successfully"));
+};
