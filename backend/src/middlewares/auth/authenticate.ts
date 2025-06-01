@@ -1,6 +1,34 @@
-import { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import { NextFunction, Request, Response } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { ApiError } from "../../utils/apiError";
+import { JWT_SECRET } from "../../secrets";
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-    const body = req.body;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: string | JwtPayload;
+    }
+  }
 }
+
+export const authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token =
+      req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      throw new ApiError(401, "Unauthorized", ["No token provided"]);
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    req.user = decoded;
+
+    next();
+  } catch (error) {
+    throw new ApiError(401, "Unauthorized", ["Invalid token"]);
+  }
+};

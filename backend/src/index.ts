@@ -7,10 +7,12 @@ import { PrismaClient } from "./generated/prisma/client";
 import { log } from "console";
 import { ApiError } from "./utils/apiError";
 import errorHandler from "./middlewares/errorHandler";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 export const prisma = new PrismaClient({
   log: ["query"],
