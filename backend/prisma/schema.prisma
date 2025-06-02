@@ -30,3 +30,42 @@ model User {
 
   @@map("users")
 }
+
+model Product {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String
+  price        Float
+  discount     Float    @default(0) // percentage
+  Stock        Int @default(0)
+  brand        String
+  tags         String[]  
+
+  images Image[]
+
+  // Category relation (many-to-one)
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  ratings    Float @default(0)
+  numReviews Int   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Image {
+  id        String  @id @default(uuid())
+  publicId  String
+  url       String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String
+  slug     String    @unique
+  products Product[]
+}
