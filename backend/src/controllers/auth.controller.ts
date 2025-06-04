@@ -12,7 +12,7 @@ export const signup: any = async (req: Request, res: Response) => {
     throw new ApiError(
       400,
       "Invalid request body",
-      parsed.error.errors.map((error) => error.message)
+      parsed.error.errors.map((error) => error.path[0] + ": " + error.message)
     );
   }
   const body = parsed.data;
