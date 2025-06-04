@@ -18,12 +18,10 @@ export const createProduct: any = async (req: Request, res: Response) => {
   }
 
   const { name, description, price, brand, discount, stock, categoryId } =
-  parsed.data;
-  
+    parsed.data;
+
   const slug =
-    slugify(name, { replacement: "-", lower: true }) +
-    "-" +
-    nanoid(8);
+    slugify(name, { replacement: "-", lower: true }) + "-" + nanoid(8);
   const product = await prisma.product.create({
     data: {
       name,
@@ -50,6 +48,27 @@ export const deleteProduct = async (req: Request, res: Response) => {
   res.json("deleted");
 };
 
-export const getProductById = async (req: Request, res: Response) => {
-  res.json("fetched");
+export const getProductById: any = async (req: Request, res: Response) => {
+  const { id: productId } = req.params;
+  if(!productId){
+    throw new ApiError(401, "Enter valid product Id");
+  }
+  try {
+     const product = await prisma.product.findFirst({
+      where: {
+        id: productId
+      },
+      include:{
+        category: true
+      }
+     })
+
+     if(!product){
+      throw new ApiError(404, "Product not found");
+     }
+     return res.status(200).json(new ApiResponse(200, product, "product found"));
+  } catch (error) {
+    
+  }
+
 };
