@@ -1,18 +1,29 @@
 import { Request, Response } from "express";
+import { ApiResponse } from "../utils/apiResponse";
+import { CreateProductSchema } from "../schema/products";
+import { ApiError } from "../utils/apiError";
 
-export const createProduct = async (req: Request, res: Response) => {
-     res.json("created")
-}
+export const createProduct: any = async (req: Request, res: Response) => {
+  const parsed = CreateProductSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new ApiError(
+      400,
+      parsed.error.errors[0].message,
+      parsed.error.errors.map((error) => error.path[0] + ": " + error.message)
+    );
+  }
+  
+  return res.status(200).json(new ApiResponse(200, parsed));
+};
 
 export const updateProduct = async (req: Request, res: Response) => {
-     res.json("updated")
-}
+  res.json("updated");
+};
 
 export const deleteProduct = async (req: Request, res: Response) => {
-     res.json("deleted")
-}
+  res.json("deleted");
+};
 
 export const getProductById = async (req: Request, res: Response) => {
-     res.json("fetched")
-}
-
+  res.json("fetched");
+};
