@@ -33,14 +33,14 @@ model User {
 }
 
 model Product {
-  id           String   @id @default(uuid())
-  name         String
-  slug         String   @unique
-  description  String
-  price        Float
-  discount     Float    @default(0) // percentage
-  stock        Int @default(0)
-  brand        String
+  id          String @id @default(uuid())
+  name        String
+  slug        String @unique
+  description String
+  price       Float
+  discount    Float  @default(0) // percentage
+  stock       Int    @default(0)
+  brand       String
 
   images Image[]
 
@@ -59,7 +59,7 @@ model Image {
   id        String  @id @default(uuid())
   publicId  String
   url       String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
 }
 
