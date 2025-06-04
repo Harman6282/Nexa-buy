@@ -40,11 +40,35 @@ export const createProduct: any = async (req: Request, res: Response) => {
     .json(new ApiResponse(200, product, "product created successfully"));
 };
 
-export const updateProduct = async (req: Request, res: Response) => {
-  res.json("updated");
+export const updateProduct: any = async (req: Request, res: Response) => {
+  const { id: productId } = req.params;
+  if (!productId) {
+    throw new ApiError(401, "Enter valid product Id");
+  }
+  try {
+    const body = req.body;
+    const product = await prisma.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        ...body,
+      },
+    });
+
+    if (!product) {
+      throw new ApiError(404, "Product not found");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, product, "product updated successfully"));
+  } catch (error) {
+    throw new ApiError(500, "Something went wrong while updating product");
+  }
 };
 
-export const deleteProduct = async (req: Request, res: Response) => {
+export const deleteProduct: any = async (req: Request, res: Response) => {
   const { id: productId } = req.params;
   if (!productId) {
     throw new ApiError(401, "Enter valid product Id");
@@ -59,7 +83,9 @@ export const deleteProduct = async (req: Request, res: Response) => {
     if (!product) {
       throw new ApiError(404, "Product not found");
     }
-    return res.status(200).json(new ApiResponse(200, product, "product found"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Product deleted successfully"));
   } catch (error) {
     throw new ApiError(500, "Something went wrong while deleting product");
   }
