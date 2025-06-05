@@ -45,27 +45,24 @@ export const updateProduct: any = async (req: Request, res: Response) => {
   if (!productId) {
     throw new ApiError(401, "Enter valid product Id");
   }
-  try {
-    const body = req.body;
-    const product = await prisma.product.update({
-      where: {
-        id: productId,
-      },
-      data: {
-        ...body,
-      },
-    });
 
-    if (!product) {
-      throw new ApiError(404, "Product not found");
-    }
+  const body = req.body;
+  const product = await prisma.product.update({
+    where: {
+      id: productId,
+    },
+    data: {
+      ...body,
+    },
+  });
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, product, "product updated successfully"));
-  } catch (error) {
-    throw new ApiError(500, "Something went wrong while updating product");
+  if (!product) {
+    throw new ApiError(404, "Product not found");
   }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, product, "product updated successfully"));
 };
 
 export const deleteProduct: any = async (req: Request, res: Response) => {
@@ -73,22 +70,19 @@ export const deleteProduct: any = async (req: Request, res: Response) => {
   if (!productId) {
     throw new ApiError(401, "Enter valid product Id");
   }
-  try {
-    const product = await prisma.product.delete({
-      where: {
-        id: productId,
-      },
-    });
 
-    if (!product) {
-      throw new ApiError(404, "Product not found");
-    }
-    return res
-      .status(200)
-      .json(new ApiResponse(200, "Product deleted successfully"));
-  } catch (error) {
-    throw new ApiError(500, "Something went wrong while deleting product");
+  const product = await prisma.product.delete({
+    where: {
+      id: productId,
+    },
+  });
+
+  if (!product) {
+    throw new ApiError(404, "Product not found");
   }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Product deleted successfully"));
 };
 
 export const getProductById: any = async (req: Request, res: Response) => {
@@ -96,22 +90,19 @@ export const getProductById: any = async (req: Request, res: Response) => {
   if (!productId) {
     throw new ApiError(401, "Enter valid product Id");
   }
-  try {
-    const product = await prisma.product.findFirst({
-      where: {
-        id: productId,
-      },
-      include: {
-        category: true,
-        images: true,
-      },
-    });
 
-    if (!product) {
-      throw new ApiError(404, "Product not found");
-    }
-    return res.status(200).json(new ApiResponse(200, product, "product found"));
-  } catch (error) {
-    throw new ApiError(500, "Something went wrong on getProductById");
+  const product = await prisma.product.findFirst({
+    where: {
+      id: productId,
+    },
+    include: {
+      category: true,
+      images: true,
+    },
+  });
+
+  if (!product) {
+    throw new ApiError(404, "Product not found");
   }
+  return res.status(200).json(new ApiResponse(200, product, "product found"));
 };

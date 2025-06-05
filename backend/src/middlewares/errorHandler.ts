@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { ApiError } from '../utils/apiError'; // adjust path
 
 // Must have 4 arguments: (err, req, res, next)
 const errorHandler = (
