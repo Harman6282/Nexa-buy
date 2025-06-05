@@ -7,12 +7,14 @@ import {
   getProductById,
   updateProduct,
 } from "../controllers/product.controller";
+import { upload } from "../middlewares/multer";
 
 const productRoutes: Router = Router();
 
 productRoutes.post(
   "/create",
   [authenticate, adminCheck],
+  upload.array("images", 5),
   asyncHandler(createProduct)
 );
 productRoutes.put(

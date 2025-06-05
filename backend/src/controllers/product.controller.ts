@@ -6,6 +6,7 @@ import slugify from "slugify";
 import { parse } from "path";
 import { nanoid } from "nanoid";
 import { prisma } from "..";
+import { uploadFilesToCloudinary } from "../utils/cloudinary";
 
 export const createProduct: any = async (req: Request, res: Response) => {
   const parsed = CreateProductSchema.safeParse(req.body);
@@ -20,6 +21,25 @@ export const createProduct: any = async (req: Request, res: Response) => {
   const { name, description, price, brand, discount, stock, categoryId } =
     parsed.data;
 
+  // upload images
+  const files = req.files as Express.Multer.File[];
+  console.log("files recived", files)
+  if (!files || files.length === 0) {
+    throw new ApiError(400, "At least one product image is required");
+  }
+
+  const filePaths = files.map((file) => file.path);
+  files.forEach((file) => {
+  console.log(file.originalname, "size:", file.size, "bytes");
+});
+  const uploadedImages = await uploadFilesToCloudinary(filePaths);
+
+  // Map image data for Prisma
+  const images = uploadedImages.map((img) => ({
+    url: img.secure_url,
+    publicId: img.public_id,
+  }));
+
   const slug =
     slugify(name, { replacement: "-", lower: true }) + "-" + nanoid(8);
   const product = await prisma.product.create({
@@ -32,7 +52,13 @@ export const createProduct: any = async (req: Request, res: Response) => {
       stock,
       slug,
       categoryId,
+      images:{
+        create: images,
+      }
     },
+    include:{
+      images: true
+    }
   });
 
   return res
