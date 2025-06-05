@@ -42,28 +42,28 @@ export const createProduct: any = async (req: Request, res: Response) => {
 
   const slug =
     slugify(name, { replacement: "-", lower: true }) + "-" + nanoid(8);
-  const product = await prisma.product.create({
-    data: {
-      name,
-      description,
-      price,
-      brand,
-      discount,
-      stock,
-      slug,
-      categoryId,
-      images:{
-        create: images,
-      }
-    },
-    include:{
-      images: true
-    }
-  });
+  // const product = await prisma.product.create({
+  //   data: {
+  //     name,
+  //     description,
+  //     price,
+  //     brand,
+  //     discount,
+  //     stock,
+  //     slug,
+  //     categoryId,
+  //     images:{
+  //       create: images,
+  //     }
+  //   },
+  //   include:{
+  //     images: true
+  //   }
+  // });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, product, "product created successfully"));
+    .json(new ApiResponse(200, images, "product created successfully"));
 };
 
 export const updateProduct: any = async (req: Request, res: Response) => {
