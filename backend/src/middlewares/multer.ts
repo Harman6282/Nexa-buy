@@ -10,7 +10,11 @@ const storage = multer.diskStorage({
   },
 });
 
-function fileFilter(req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
+function fileFilter(
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) {
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (ext === ".jpg" || ext === ".jpeg" || ext === ".png" || ext === ".webp") {
@@ -23,5 +27,5 @@ function fileFilter(req: Express.Request, file: Express.Multer.File, cb: multer.
 export const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter
+  fileFilter,
 });

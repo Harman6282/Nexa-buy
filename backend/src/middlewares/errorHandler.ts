@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 // Must have 4 arguments: (err, req, res, next)
 const errorHandler = (
@@ -12,10 +12,10 @@ const errorHandler = (
   res.status(statusCode).json({
     statusCode,
     data: err.data || null,
-    message: err.message || 'Something went wrong',
+    message: err.message || "Something went wrong",
     success: false,
     errors: err.errors || [],
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 };
 

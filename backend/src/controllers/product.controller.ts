@@ -30,17 +30,18 @@ export const createProduct: any = async (req: Request, res: Response) => {
   const uploadedImages: any = [];
 
   for (const file of files) {
-     const result = await uploadOnCloudinary(file.path);
-     
-     uploadedImages.push({
+    const result = await uploadOnCloudinary(file.path);
+
+    uploadedImages.push({
       url: result.secure_url,
-      publicId: result.public_id
-     })
+      publicId: result.public_id,
+    });
   }
 
   // Map image data for Prisma
 
-  const slug = slugify(name, { replacement: "-", lower: true }) + "-" + nanoid(8);
+  const slug =
+    slugify(name, { replacement: "-", lower: true }) + "-" + nanoid(8);
   const product = await prisma.product.create({
     data: {
       name,
@@ -51,13 +52,13 @@ export const createProduct: any = async (req: Request, res: Response) => {
       stock,
       slug,
       categoryId,
-      images:{
+      images: {
         create: uploadedImages,
-      }
+      },
     },
-    include:{
-      images: true
-    }
+    include: {
+      images: true,
+    },
   });
 
   return res
@@ -132,9 +133,7 @@ export const getProductById: any = async (req: Request, res: Response) => {
   return res.status(200).json(new ApiResponse(200, product, "product found"));
 };
 
-
-export const getAllProducts: any  = async (req: Request, res: Response) => {
-  
+export const getAllProducts: any = async (req: Request, res: Response) => {
   const products = await prisma.product.findMany({
     include: {
       category: true,
@@ -146,7 +145,5 @@ export const getAllProducts: any  = async (req: Request, res: Response) => {
     throw new ApiError(404, "Error fetching products");
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, products, "products found"));
-}
+  return res.status(200).json(new ApiResponse(200, products, "products found"));
+};
