@@ -1,10 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import {
-  CLOUDINARY_NAME,
-  CLOUDINARY_API_KEY,
-  CLOUDINARY_API_SECRET,
-} from "../secrets";
+import { CLOUDINARY_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } from "../secrets";
+import { ApiError } from "./apiError";
 
 // Cloudinary config
 cloudinary.config({
@@ -14,50 +11,49 @@ cloudinary.config({
 });
 
 // Upload function
-const uploadFilesToCloudinary = async (filePaths: string[]): Promise<any[]> => {
-  if (!filePaths || filePaths.length === 0) {
-    throw new Error("No files provided for upload.");
+const uploadOnCloudinary = async (localFilePath: string)=> {
+  if (!localFilePath) {
+    throw new ApiError(400, "Image is required");
   }
+  console.log("localfilepath", localFilePath)
+  try {
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+      folder: "images",
+      timeout: 60000,
+    });
 
-  if (filePaths.length > 5) {
-    throw new Error("You can upload a maximum of 5 files.");
-  }
+    console.log("response: ", response)
 
-  const uploadPromises = filePaths.map(async (filePath) => {
-    try {
-      const response = await cloudinary.uploader.upload(filePath, {
-        resource_type: "auto",
-        timeout: 60000,
-      });
-      fs.unlinkSync(filePath); // Delete local file after upload
-      return response;
-    } catch (error) {
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Cleanup on failure too
-      console.error(`Failed to upload ${filePath}:`, error);
-      return null;
+    fs.unlinkSync(localFilePath); // delete after successful upload
+    return response;
+  } catch (error: any) {
+    // clean up even if upload fails
+    if (fs.existsSync(localFilePath)) {
+      try {
+        fs.unlinkSync(localFilePath);
+      } catch (unlinkErr) {
+        console.warn("Error deleting file:", unlinkErr);
+      }
     }
-  });
 
-  const results = await Promise.all(uploadPromises);
-  return results.filter(Boolean); // Remove nulls (failed uploads)
+    console.log(error)
+
+    throw new ApiError(500, "Cloudinary upload failed", [error?.message || error]);
+  }
 };
 
 // Delete function
-const deleteFilesFromCloudinary = async (publicIds: string[] | string): Promise<any> => {
+const deleteFromCloudinary = async (public_id: string): Promise<void> => {
   try {
-    const ids = Array.isArray(publicIds) ? publicIds : [publicIds];
-
-    if (ids.length === 0) {
-      throw new Error("No public_id(s) provided for deletion.");
-    }
-
-    const response = await cloudinary.api.delete_resources(ids);
-    console.log("Deleted resources:", response);
-    return response;
-  } catch (error) {
-    console.error("Error while deleting files from Cloudinary:", error);
-    throw error;
+    await cloudinary.uploader.destroy(public_id, (error, result) => {
+      if (error) {
+        console.error("Error while deleting from Cloudinary:", error);
+      }
+    });
+  } catch (err) {
+    console.error("Unexpected error while deleting from Cloudinary:", err);
   }
 };
 
-export { uploadFilesToCloudinary, deleteFilesFromCloudinary };
+export { uploadOnCloudinary, deleteFromCloudinary };
