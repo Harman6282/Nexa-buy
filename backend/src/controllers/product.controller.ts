@@ -131,3 +131,22 @@ export const getProductById: any = async (req: Request, res: Response) => {
   }
   return res.status(200).json(new ApiResponse(200, product, "product found"));
 };
+
+
+export const getAllProducts: any  = async (req: Request, res: Response) => {
+  
+  const products = await prisma.product.findMany({
+    include: {
+      category: true,
+      images: true,
+    },
+  });
+
+  if (!products) {
+    throw new ApiError(404, "Error fetching products");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, products, "products found"));
+}

@@ -4,6 +4,7 @@ import { adminCheck, authenticate } from "../middlewares/auth/authenticate";
 import {
   createProduct,
   deleteProduct,
+  getAllProducts,
   getProductById,
   updateProduct,
 } from "../controllers/product.controller";
@@ -28,5 +29,6 @@ productRoutes.delete(
   asyncHandler(deleteProduct)
 );
 productRoutes.get("/:id", asyncHandler(getProductById));
+productRoutes.get("/", asyncHandler(getAllProducts));
 
 export default productRoutes;
