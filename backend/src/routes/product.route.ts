@@ -6,6 +6,7 @@ import {
   deleteProduct,
   getAllProducts,
   getProductById,
+  getProductsByQuery,
   updateProduct,
 } from "../controllers/product.controller";
 import { upload } from "../middlewares/multer";
@@ -28,7 +29,9 @@ productRoutes.delete(
   [authenticate, adminCheck],
   asyncHandler(deleteProduct)
 );
+productRoutes.get("/search", asyncHandler(getProductsByQuery));
 productRoutes.get("/:id", asyncHandler(getProductById));
 productRoutes.get("/", asyncHandler(getAllProducts));
+
 
 export default productRoutes;
