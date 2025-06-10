@@ -26,6 +26,9 @@ model User {
   password  String
   imageUrl  String?
   role      Role     @default(USER)
+
+  cartItem CartItem[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -43,6 +46,7 @@ model Product {
   brand       String
 
   images Image[]
+  cartItem CartItem[]
 
   // Category relation (many-to-one)
   category   Category @relation(fields: [categoryId], references: [id])
@@ -68,4 +72,16 @@ model Category {
   name     String
   slug     String    @unique
   products Product[]
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  quantity  Int
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
 }
