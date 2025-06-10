@@ -20,14 +20,15 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  imageUrl  String?
-  role      Role     @default(USER)
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String
+  imageUrl String?
+  role     Role    @default(USER)
 
-  cartItem CartItem[]
+  cart    Cart[]
+  address Address[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -45,7 +46,7 @@ model Product {
   stock       Int    @default(0)
   brand       String
 
-  images Image[]
+  images   Image[]
   cartItem CartItem[]
 
   // Category relation (many-to-one)
@@ -74,14 +75,34 @@ model Category {
   products Product[]
 }
 
+model Cart {
+  id     String     @id @default(uuid())
+  user   User       @relation(fields: [userId], references: [id])
+  userId String     @unique
+  items  CartItem[]
+}
+
 model CartItem {
   id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id])
   productId String
   quantity  Int
   product   Product  @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
 
+model Address {
+  id        String   @id @default(uuid())
+  lineOne   String
+  lineTwo   String?
+  city      String
+  pincode   String
+  country   String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
 }
