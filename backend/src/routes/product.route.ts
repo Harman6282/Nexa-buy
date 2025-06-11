@@ -33,5 +33,4 @@ productRoutes.get("/search", asyncHandler(getProductsByQuery));
 productRoutes.get("/:id", asyncHandler(getProductById));
 productRoutes.get("/", asyncHandler(getAllProducts));
 
-
 export default productRoutes;

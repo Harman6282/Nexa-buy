@@ -18,7 +18,7 @@ authRoutes.post("/protected", [authenticate], asyncHandler(authenticateTest));
 authRoutes.post(
   "/adminpage",
   [authenticate, adminCheck],
-  asyncHandler(adminTest) 
+  asyncHandler(adminTest)
 );
 
 export default authRoutes;
