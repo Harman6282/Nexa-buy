@@ -9,6 +9,15 @@ import { prisma } from "..";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 
 export const createProduct: any = async (req: Request, res: Response) => {
+  console.log("createProduct called");
+  if (typeof req.body.variants === "string") {
+    try {
+      req.body.variants = JSON.parse(req.body.variants);
+    } catch (err) {
+      throw new ApiError(400, "Invalid JSON format for 'variants'");
+    }
+  }
+
   const parsed = CreateProductSchema.safeParse(req.body);
   if (!parsed.success) {
     throw new ApiError(
@@ -18,7 +27,7 @@ export const createProduct: any = async (req: Request, res: Response) => {
     );
   }
 
-  const { name, description, price, brand, discount, stock, categoryId } =
+  const { name, description, price, brand, discount, categoryId, variants } =
     parsed.data;
 
   // upload images
@@ -49,15 +58,18 @@ export const createProduct: any = async (req: Request, res: Response) => {
       price,
       brand,
       discount,
-      stock,
       slug,
       categoryId,
       images: {
         create: uploadedImages,
       },
+      variants: {
+        create: variants,
+      },
     },
     include: {
       images: true,
+      variants: true,
     },
   });
 
@@ -125,6 +137,7 @@ export const getProductById: any = async (req: Request, res: Response) => {
     include: {
       category: true,
       images: true,
+      variants: true,
     },
   });
 
@@ -139,6 +152,7 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
     include: {
       category: true,
       images: true,
+      variants: true,
     },
   });
 
@@ -164,6 +178,7 @@ export const getProductsByQuery: any = async (req: Request, res: Response) => {
     include: {
       category: true,
       images: true,
+      variants: true,
     },
   });
 

@@ -51,13 +51,12 @@ model Product {
   slug        String @unique
   description String
   price       Float
-  discount    Float  @default(0) // percentage
-  stock       Int    @default(0)
+  discount    Float  @default(0) 
   brand       String
 
   images         Image[]
   cartItem       CartItem[]
-  productVariant ProductVariant[]
+  variants ProductVariant[]
 
   // Category relation (many-to-one)
   category   Category @relation(fields: [categoryId], references: [id])
