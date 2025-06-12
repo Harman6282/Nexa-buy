@@ -97,4 +97,24 @@ export const updateCartItem = (req: Request, res: Response) => {
 
 export const removeItemFromCart = (req: Request, res: Response) => {};
 
-export const clearCart = (req: Request, res: Response) => {};
+export const clearCart: any = async (req: Request, res: Response) => {
+  const userId = (req?.user as JwtPayload).id;
+
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+  });
+
+  if (!cart) {
+    throw new ApiError(404, "Cart not found");
+  }
+
+  await prisma.cartItem.deleteMany({
+    where: {
+      cartId: cart.id,
+    },
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Cart cleared successfully"));
+};

@@ -8,7 +8,6 @@ import { log } from "console";
 import { ApiError } from "./utils/apiError";
 import errorHandler from "./middlewares/errorHandler";
 import cookieParser from "cookie-parser";
-import multer from "multer";
 
 const app = express();
 
