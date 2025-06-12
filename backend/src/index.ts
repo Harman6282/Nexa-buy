@@ -3,7 +3,7 @@ dotenv.config();
 import express, { NextFunction, Request, Response } from "express";
 import rootRouter from "./routes";
 import { PORT } from "./secrets";
-import { PrismaClient } from "./generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { log } from "console";
 import { ApiError } from "./utils/apiError";
 import errorHandler from "./middlewares/errorHandler";
