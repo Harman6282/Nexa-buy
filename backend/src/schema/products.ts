@@ -17,3 +17,10 @@ export const CreateProductSchema = z.object({
     )
     .nonempty("At least one variant is required"),
 });
+
+
+export const AddToCartSchema = z.object({
+  productId : string().min(1, "Product ID is required"),
+  variantId: string().min(1, "Variant ID is required"),
+  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+})
