@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { authenticate } from "../middlewares/auth/authenticate";
-import {} from "../controllers/product.controller";
 import {
   addToCart,
   clearCart,
