@@ -42,7 +42,39 @@ export const createAddress: any = async (req: Request, res: Response) => {
   });
 };
 
-export const updateAddress: any = async (req: Request, res: Response) => {};
+export const updateAddress: any = async (req: Request, res: Response) => {
+  const addressId = req.params.id;
+  const { lineOne, lineTwo, city, pincode, country, state } = req.body;
+
+  const address = await prisma.address.findFirst({
+    where: {
+      id: addressId,
+    },
+  });
+
+  if (!address) {
+    throw new ApiError(404, "Address not found");
+  }
+
+  const updated = await prisma.address.update({
+    where: {
+      id: addressId,
+    },
+    data: {
+      lineOne: lineOne || address?.lineOne,
+      lineTwo: lineTwo || address?.lineTwo,
+      city: city || address?.city,
+      state: state || address?.state,
+      pincode: pincode || address?.pincode,
+      country: country || address?.country,
+    },
+  });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200,updated, "Address updated successfully"));
+
+};
 
 export const deleteAddress: any = async (req: Request, res: Response) => {
   const addressId = req.params.id;
@@ -57,7 +89,9 @@ export const deleteAddress: any = async (req: Request, res: Response) => {
     throw new ApiError(404, "Address not found");
   }
 
-  return res.status(200).json(new ApiResponse(200, address, "Address deleted successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Address deleted successfully"));
 };
 
 export const getAllAddresses: any = async (req: Request, res: Response) => {
