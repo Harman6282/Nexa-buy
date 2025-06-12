@@ -3,13 +3,14 @@ import { CreateAddressSchema } from "../schema/users";
 import { prisma } from "..";
 import { JwtPayload } from "jsonwebtoken";
 import { ApiError } from "../utils/apiError";
+import { ApiResponse } from "../utils/apiResponse";
 
 export const createAddress: any = async (req: Request, res: Response) => {
   const userId = (req.user as JwtPayload).id;
 
   const parsed = CreateAddressSchema.safeParse(req.body);
   if (!parsed.success) {
-     throw new ApiError(
+    throw new ApiError(
       400,
       parsed.error.errors[0].message,
       parsed.error.errors.map((error) => error.path[0] + ": " + error.message)
@@ -45,4 +46,20 @@ export const updateAddress: any = async (req: Request, res: Response) => {};
 
 export const deleteAddress: any = async (req: Request, res: Response) => {};
 
-export const getAllAddresses: any = async (req: Request, res: Response) => {};
+export const getAllAddresses: any = async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).id;
+
+  const addresses = await prisma.address.findMany({
+    where: {
+      userId,
+    },
+  });
+
+  if (!addresses || addresses.length === 0) {
+    throw new ApiError(404, "No addresses found for this user");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, addresses, "Addresses retrieved successfully"));
+};
