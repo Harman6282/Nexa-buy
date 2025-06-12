@@ -91,11 +91,45 @@ export const addToCart: any = async (req: Request, res: Response) => {
 
   return res.status(200).json(new ApiResponse(200, "Item added to cart"));
 };
+
 export const updateCartItem = (req: Request, res: Response) => {
   //  Update quantity/variant
 };
 
-export const removeItemFromCart = (req: Request, res: Response) => {};
+export const removeItemFromCart: any = async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).id;
+  const cartItemId = req.params.id;
+
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+  });
+
+  if (!cart) {
+    throw new ApiError(404, "Cart not found");
+  }
+
+  const cartItem = await prisma.cartItem.findFirst({
+    where: {
+      cartId: cart.id,
+      id: cartItemId,
+    },
+  });
+
+  if (!cartItem) {
+    throw new ApiError(404, "Cart item not found");
+  }
+
+  await prisma.cartItem.delete({
+    where: {
+      cartId: cart.id,
+      id: cartItemId,
+    },
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, cartItem, "Item removed from cart"));
+};
 
 export const clearCart: any = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload).id;
