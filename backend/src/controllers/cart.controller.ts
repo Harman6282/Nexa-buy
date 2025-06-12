@@ -5,7 +5,29 @@ import { AddToCartSchema } from "../schema/products";
 import { ApiError } from "../utils/apiError";
 import { prisma } from "..";
 
-export const getCart = (req: Request, res: Response) => {};
+export const getCart: any = async (req: Request, res: Response) => {
+  const userId = (req?.user as JwtPayload).id;
+
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+    include: {
+      items: {
+        include: {
+          product: true,
+          variant: true,
+        },
+      },
+    },
+  });
+
+  if (!cart) {
+    throw new ApiError(404, "Cart not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, cart, "Cart retrieved successfully"));
+};
 
 export const addToCart: any = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload).id;
