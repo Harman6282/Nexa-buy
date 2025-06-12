@@ -122,6 +122,7 @@ model Address {
   lineOne   String
   lineTwo   String?
   city      String
+  state     String
   pincode   String
   country   String
   userId    String
