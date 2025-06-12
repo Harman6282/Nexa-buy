@@ -44,7 +44,21 @@ export const createAddress: any = async (req: Request, res: Response) => {
 
 export const updateAddress: any = async (req: Request, res: Response) => {};
 
-export const deleteAddress: any = async (req: Request, res: Response) => {};
+export const deleteAddress: any = async (req: Request, res: Response) => {
+  const addressId = req.params.id;
+
+  const address = await prisma.address.deleteMany({
+    where: {
+      id: addressId,
+    },
+  });
+
+  if (!address) {
+    throw new ApiError(404, "Address not found");
+  }
+
+  return res.status(200).json(new ApiResponse(200, address, "Address deleted successfully"));
+};
 
 export const getAllAddresses: any = async (req: Request, res: Response) => {
   const userId = (req.user as JwtPayload).id;
