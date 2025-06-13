@@ -108,6 +108,33 @@ export const getAllOrders: any = async (req: Request, res: Response) => {
     .json(new ApiResponse(200, orders, "Orders fetched successfully"));
 };
 
-export const getSingleOrder: any = async (req: Request, res: Response) => {};
+export const getSingleOrder: any = async (req: Request, res: Response) => {
+  const userId = (req?.user as JwtPayload)?.id;
+  const orderId = req.params.id;
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId, userId },
+    include: {
+      items: {
+        include: {
+          variant: true,
+          product: {
+            include: {
+              images: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, order, "Order fetched successfully"));
+};
 
 export const cancelOrder: any = async (req: Request, res: Response) => {};
