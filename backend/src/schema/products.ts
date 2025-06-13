@@ -24,3 +24,9 @@ export const AddToCartSchema = z.object({
   variantId: string().min(1, "Variant ID is required"),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
 })
+
+export const CreateOrderSchema = z.object({
+   cartId: string().min(1, "Cart ID is required"),
+  addressId:  string().min(1, "Address ID is required"),
+
+})
