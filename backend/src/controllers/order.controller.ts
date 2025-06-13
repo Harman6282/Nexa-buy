@@ -137,4 +137,28 @@ export const getSingleOrder: any = async (req: Request, res: Response) => {
     .json(new ApiResponse(200, order, "Order fetched successfully"));
 };
 
-export const cancelOrder: any = async (req: Request, res: Response) => {};
+export const cancelOrder: any = async (req: Request, res: Response) => {
+  const userId = (req?.user as JwtPayload)?.id;
+  const orderId = req.params.id;
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId, userId },
+  });
+
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
+
+  if (order.status === "CANCELLED") {
+    throw new ApiError(400, "Order is already cancelled");
+  }
+
+  const updatedOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: { status: "CANCELLED" },
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedOrder, "Order cancelled successfully"));
+};

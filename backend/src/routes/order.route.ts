@@ -13,7 +13,7 @@ const orderRoutes: Router = Router();
 orderRoutes.post("/", [authenticate], asyncHandler(createOrder));
 orderRoutes.get("/", [authenticate], asyncHandler(getAllOrders));
 orderRoutes.get("/:id", [authenticate], asyncHandler(getSingleOrder));
-orderRoutes.delete("/:id", [authenticate], asyncHandler(cancelOrder));
+orderRoutes.put("/:id", [authenticate], asyncHandler(cancelOrder));
 
 
 export default orderRoutes

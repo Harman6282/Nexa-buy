@@ -67,7 +67,7 @@ export const addToCart: any = async (req: Request, res: Response) => {
         id: existingItem.id,
       },
       data: {
-        quantity: existingItem.quantity + 1,
+        quantity: existingItem.quantity + (parsed.data.quantity || 1),
       },
     });
 
