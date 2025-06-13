@@ -53,6 +53,7 @@ export const createOrder: any = async (req: Request, res: Response) => {
       address: `${address.lineOne}, ${address.lineTwo}, ${address.city}, ${address.state}, ${address.pincode}, ${address.country}`,
       items: {
         create: cart.items.map((item) => ({
+          productId: item.productId,
           variantId: item.variantId,
           quantity: item.quantity,
           price: item.product.price,
@@ -61,7 +62,12 @@ export const createOrder: any = async (req: Request, res: Response) => {
       total: total,
     },
     include: {
-      items: true,
+      items: {
+        include: {
+          product: true,
+          variant: true,
+        },
+      },
     },
   });
 
@@ -74,7 +80,33 @@ export const createOrder: any = async (req: Request, res: Response) => {
     .json(new ApiResponse(201, newOrder, "Order created successfully"));
 };
 
-export const getAllOrders: any = async (req: Request, res: Response) => {};
+export const getAllOrders: any = async (req: Request, res: Response) => {
+  const userId = (req?.user as JwtPayload)?.id;
+
+  const orders = await prisma.order.findMany({
+    where: { userId },
+    include: {
+      items: {
+        include: {
+          variant: true,
+          product: {
+            include: {
+              images: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!orders || orders.length === 0) {
+    throw new ApiError(404, "No orders found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, orders, "Orders fetched successfully"));
+};
 
 export const getSingleOrder: any = async (req: Request, res: Response) => {};
 

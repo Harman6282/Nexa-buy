@@ -56,6 +56,7 @@ model Product {
   images   Image[]
   cartItem CartItem[]
   variants ProductVariant[]
+  orderItem OrderItem[]
 
   // Category relation (many-to-one)
   category   Category @relation(fields: [categoryId], references: [id])
@@ -147,7 +148,9 @@ model OrderItem {
   id        String         @id @default(uuid())
   order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId   String
-  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  product   Product       @relation(fields: [productId], references: [id])
+  productId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
   variantId String
   quantity  Int
   price     Float
