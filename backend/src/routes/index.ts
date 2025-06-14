@@ -4,6 +4,7 @@ import productRoutes from "./product.route";
 import cartRoutes from "./cart.routes";
 import addressRoutes from "./address.route";
 import orderRoutes from "./order.route";
+import adminRoutes from "./admin.route";
 
 const rootRouter: Router = Router();
 
@@ -12,5 +13,6 @@ rootRouter.use("/products", productRoutes);
 rootRouter.use("/cart", cartRoutes);
 rootRouter.use("/address", addressRoutes);
 rootRouter.use("/orders", orderRoutes);
+rootRouter.get("/", adminRoutes);
 
 export default rootRouter;
