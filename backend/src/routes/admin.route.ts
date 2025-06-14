@@ -7,5 +7,5 @@ import { updateOrderStatus } from "../controllers/admin/admin.controller";
 
 const adminRoutes: Router = Router();
 
-adminRoutes.put("/signup", asyncHandler(updateOrderStatus));
+adminRoutes.put("/orderstatus/:id", asyncHandler(updateOrderStatus));
 export default adminRoutes;

@@ -18,3 +18,16 @@ export const updateOrderStatus: any = async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, order, "Order status updated successfully"));
 };
+
+export const createCategory: any = async (req: Request, res: Response) => {
+  const { name } = req.body;
+  const category = await prisma.category.create({
+    data: { name },
+  });
+  if (!category) {
+    throw new ApiError(400, "Failed to create category");
+  }
+  return res
+    .status(201)
+    .json(new ApiResponse(201, category, "Category created successfully"));
+};
