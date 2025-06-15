@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { adminCheck, authenticate } from "../middlewares/auth/authenticate";
 import {
   createCategory,
+  deleteCategory,
   updateCategory,
   updateOrderStatus,
 } from "../controllers/admin/admin.controller";
@@ -23,5 +24,10 @@ adminRoutes.put(
   "/category/:id",
   [authenticate, adminCheck],
   asyncHandler(updateCategory)
+);
+adminRoutes.delete(
+  "/category/:id",
+  [authenticate, adminCheck],
+  asyncHandler(deleteCategory)
 );
 export default adminRoutes;

@@ -59,3 +59,22 @@ export const updateCategory: any = (req: Request, res: Response) => {
      .json(new ApiResponse(200, category, "Category updated successfully"));
 
 }
+
+
+export const deleteCategory: any = (req: Request, res: Response) => {
+   const { id: categoryId } = req.params;
+   const { name } = req.body;
+   if (!name) {
+     throw new ApiError(400, "Category name is required");
+   }
+   const category = prisma.category.delete({
+     where: { id: categoryId },
+   });
+   if (!category) {
+     throw new ApiError(400, "Failed to delete category");
+   }
+   return res
+     .status(200)
+     .json(new ApiResponse(200, category, "Category deleted successfully"));
+
+}
