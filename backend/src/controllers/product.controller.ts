@@ -188,3 +188,30 @@ export const getProductsByQuery: any = async (req: Request, res: Response) => {
 
   return res.status(200).json(new ApiResponse(200, products, "products found"));
 };
+
+export const getProductsByCategory: any = async (
+  req: Request,
+  res: Response
+) => {
+  const { id: categoryId } = req.params;
+
+  if (!categoryId) {
+    throw new ApiError(401, "Enter valid category Id");
+  }
+
+  const products = await prisma.product.findMany({
+    where: {
+      categoryId,
+    },
+    include: {
+      category: true,
+      images: true,
+      variants: true,
+    },
+  });
+
+  if (!products) {
+    throw new ApiError(404, "No products found");
+  }
+  return res.status(200).json(new ApiResponse(200, products, "products found"));
+};

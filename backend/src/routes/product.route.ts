@@ -6,6 +6,7 @@ import {
   deleteProduct,
   getAllProducts,
   getProductById,
+  getProductsByCategory,
   getProductsByQuery,
   updateProduct,
 } from "../controllers/product.controller";
@@ -32,5 +33,6 @@ productRoutes.delete(
 productRoutes.get("/search", asyncHandler(getProductsByQuery));
 productRoutes.get("/:id", asyncHandler(getProductById));
 productRoutes.get("/", asyncHandler(getAllProducts));
+productRoutes.get("/category/:id", asyncHandler(getProductsByCategory));
 
 export default productRoutes;
