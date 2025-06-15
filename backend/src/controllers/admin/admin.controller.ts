@@ -39,3 +39,23 @@ export const createCategory: any = async (req: Request, res: Response) => {
     .status(201)
     .json(new ApiResponse(201, category, "Category created successfully"));
 };
+
+
+export const updateCategory: any = (req: Request, res: Response) => {
+   const { id: categoryId } = req.params;
+   const { name } = req.body;
+   if (!name) {
+     throw new ApiError(400, "Category name is required");
+   }
+   const category = prisma.category.update({
+     where: { id: categoryId },
+     data: { name },
+   });
+   if (!category) {
+     throw new ApiError(400, "Failed to update category");
+   }
+   return res
+     .status(200)
+     .json(new ApiResponse(200, category, "Category updated successfully"));
+
+}
