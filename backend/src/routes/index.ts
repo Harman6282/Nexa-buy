@@ -13,6 +13,6 @@ rootRouter.use("/products", productRoutes);
 rootRouter.use("/cart", cartRoutes);
 rootRouter.use("/address", addressRoutes);
 rootRouter.use("/orders", orderRoutes);
-rootRouter.get("/", adminRoutes);
+rootRouter.use("/admin", adminRoutes);
 
 export default rootRouter;

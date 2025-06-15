@@ -8,11 +8,14 @@ import {
 
 const adminRoutes: Router = Router();
 
-adminRoutes.put("/orderstatus/:id", asyncHandler(updateOrderStatus));
+adminRoutes.put(
+  "/orderstatus/:id",
+  [authenticate, adminCheck],
+  asyncHandler(updateOrderStatus)
+);
 adminRoutes.post(
   "/category",
-  authenticate,
-  adminCheck,
+  [authenticate, adminCheck],
   asyncHandler(createCategory)
 );
 export default adminRoutes;
