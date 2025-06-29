@@ -1,6 +1,10 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import { CLOUDINARY_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } from "../secrets";
+import {
+  CLOUDINARY_NAME,
+  CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET,
+} from "../secrets";
 import { ApiError } from "./apiError";
 
 // Cloudinary config
@@ -11,11 +15,11 @@ cloudinary.config({
 });
 
 // Upload function
-const uploadOnCloudinary = async (localFilePath: string)=> {
+const uploadOnCloudinary = async (localFilePath: string) => {
   if (!localFilePath) {
     throw new ApiError(400, "Image is required");
   }
-  console.log("localfilepath", localFilePath)
+  console.log("localfilepath", localFilePath);
   try {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
@@ -23,7 +27,7 @@ const uploadOnCloudinary = async (localFilePath: string)=> {
       timeout: 60000,
     });
 
-    console.log("response: ", response)
+    console.log("response: ", response);
 
     fs.unlinkSync(localFilePath); // delete after successful upload
     return response;
@@ -37,9 +41,11 @@ const uploadOnCloudinary = async (localFilePath: string)=> {
       }
     }
 
-    console.log(error)
+    console.log(error);
 
-    throw new ApiError(500, "Cloudinary upload failed", [error?.message || error]);
+    throw new ApiError(500, "Cloudinary upload failed", [
+      error?.message || error,
+    ]);
   }
 };
 

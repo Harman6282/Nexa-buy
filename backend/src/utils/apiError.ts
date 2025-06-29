@@ -3,7 +3,7 @@ export class ApiError extends Error {
   data: null;
   success: boolean;
   errors: any[];
-  
+
   constructor(
     statusCode: number,
     message: string = "Something went wrong",

@@ -43,7 +43,7 @@ export const createOrder: any = async (req: Request, res: Response) => {
     throw new ApiError(404, "Invalid address");
   }
 
-  const total = cart.items.reduce((acc, item) => {
+  const total = cart.items.reduce((acc: any, item: any) => {
     return acc + item.quantity * item.product.price;
   }, 0);
 
@@ -52,7 +52,7 @@ export const createOrder: any = async (req: Request, res: Response) => {
       userId,
       address: `${address.lineOne}, ${address.lineTwo}, ${address.city}, ${address.state}, ${address.pincode}, ${address.country}`,
       items: {
-        create: cart.items.map((item) => ({
+        create: cart.items.map((item: any) => ({
           productId: item.productId,
           variantId: item.variantId,
           quantity: item.quantity,

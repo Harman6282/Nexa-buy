@@ -2,7 +2,12 @@ import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { authenticate } from "../middlewares/auth/authenticate";
 import {} from "../controllers/product.controller";
-import { createAddress, deleteAddress, getAllAddresses, updateAddress } from "../controllers/address.controller";
+import {
+  createAddress,
+  deleteAddress,
+  getAllAddresses,
+  updateAddress,
+} from "../controllers/address.controller";
 
 const addressRoutes: Router = Router();
 
