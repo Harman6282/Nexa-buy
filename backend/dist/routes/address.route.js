@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const asyncHandler_1 = require("../utils/asyncHandler");
+const authenticate_1 = require("../middlewares/auth/authenticate");
+const address_controller_1 = require("../controllers/address.controller");
+const addressRoutes = (0, express_1.Router)();
+addressRoutes.post("/", [authenticate_1.authenticate], (0, asyncHandler_1.asyncHandler)(address_controller_1.createAddress));
+addressRoutes.put("/update/:id", [authenticate_1.authenticate], (0, asyncHandler_1.asyncHandler)(address_controller_1.updateAddress));
+addressRoutes.delete("/delete/:id", [authenticate_1.authenticate], (0, asyncHandler_1.asyncHandler)(address_controller_1.deleteAddress));
+addressRoutes.get("/", [authenticate_1.authenticate], (0, asyncHandler_1.asyncHandler)(address_controller_1.getAllAddresses));
+exports.default = addressRoutes;
