@@ -88,8 +88,22 @@ export const me = async (req: Request, res: Response) => {
   const user = await prisma.user.findUnique({
     where: {
       id: userId
+    },
+    select:{
+      id: true,
+      name: true,
+      email: true,
+      imageUrl: true,
+      address: true,
+      _count: true,
+      cart: true,
+      createdAt: true,
+      order: true,
+      updatedAt: true
     }
+    
   });
+
 
   res
     .status(200)

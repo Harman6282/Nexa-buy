@@ -13,7 +13,7 @@ export const getCart: any = async (req: Request, res: Response) => {
     include: {
       items: {
         include: {
-          product: true,
+          product: { include: { images: true } },
           variant: true,
         },
       },

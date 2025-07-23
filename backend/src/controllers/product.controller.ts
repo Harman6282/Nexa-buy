@@ -172,6 +172,7 @@ export const getProductsByQuery: any = async (req: Request, res: Response) => {
         { name: { contains: q, mode: "insensitive" } },
         { description: { contains: q, mode: "insensitive" } },
         { brand: { contains: q, mode: "insensitive" } },
+        { slug: {contains: q, mode: "insensitive"}}
       ],
     },
 
