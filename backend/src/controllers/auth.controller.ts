@@ -5,6 +5,7 @@ import bcryptjs from "bcryptjs";
 import { generateToken } from "../utils/generateToken";
 import { ApiResponse } from "../utils/apiResponse";
 import { ApiError } from "../utils/apiError";
+import { JwtPayload } from "jsonwebtoken";
 export const signup: any = async (req: Request, res: Response) => {
   const parsed = SignUpSchema.safeParse(req.body);
 
@@ -81,9 +82,18 @@ export const login: any = async (req: Request, res: Response) => {
   res.status(200).json(new ApiResponse(200, user, "Logged in"));
 };
 
-export const authenticateTest = (req: Request, res: Response) => {
-  const user = req.user;
-  res.status(200).json(new ApiResponse(200, user, " user Test successful"));
+export const me = async (req: Request, res: Response) => {
+  const userId = (req?.user as JwtPayload).id;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId
+    }
+  });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, " user fetched successfully"));
 };
 export const adminTest = (req: Request, res: Response) => {
   res.status(200).json(new ApiResponse(200, {}, "admin Test successful"));
