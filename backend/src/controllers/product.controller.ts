@@ -27,7 +27,7 @@ export const createProduct: any = async (req: Request, res: Response) => {
     );
   }
 
-  const { name, description, price, brand, discount, categoryId, variants } =
+  const { name, description, price, brand, discount, categoryName, variants } =
     parsed.data;
 
   // upload images
@@ -59,7 +59,7 @@ export const createProduct: any = async (req: Request, res: Response) => {
       brand,
       discount,
       slug,
-      categoryId,
+      categoryName,
       images: {
         create: uploadedImages,
       },
@@ -172,7 +172,7 @@ export const getProductsByQuery: any = async (req: Request, res: Response) => {
         { name: { contains: q, mode: "insensitive" } },
         { description: { contains: q, mode: "insensitive" } },
         { brand: { contains: q, mode: "insensitive" } },
-        { slug: {contains: q, mode: "insensitive"}}
+        { slug: { contains: q, mode: "insensitive" } },
       ],
     },
 
@@ -194,15 +194,15 @@ export const getProductsByCategory: any = async (
   req: Request,
   res: Response
 ) => {
-  const { id: categoryId } = req.params;
+  const { name } = req.params;
 
-  if (!categoryId) {
+  if (!name) {
     throw new ApiError(401, "Enter valid category Id");
   }
 
   const products = await prisma.product.findMany({
     where: {
-      categoryId,
+      name,
     },
     include: {
       category: true,
@@ -211,8 +211,10 @@ export const getProductsByCategory: any = async (
     },
   });
 
-  if (!products) {
-    throw new ApiError(404, "No products found");
+  console.log(products);
+
+  if (!products || []) {
+    throw new ApiError(404, "No products of this category found");
   }
   return res.status(200).json(new ApiResponse(200, products, "products found"));
 };

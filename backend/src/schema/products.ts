@@ -6,7 +6,7 @@ export const CreateProductSchema = z.object({
   price: z.coerce.number().min(1, "Product price is required").default(0),
   discount: z.coerce.number().default(0),
   brand: string().min(1, "Product brand is required"),
-  categoryId: string().min(1, "Product category is required"),
+  categoryName: string().min(1, "Product category is required"),
   variants: z
     .array(
       z.object({

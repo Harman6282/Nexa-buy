@@ -59,8 +59,8 @@ model Product {
   orderItem OrderItem[]
 
   // Category relation (many-to-one)
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String
+  category     Category @relation(fields: [categoryName], references: [name])
+  categoryName String   @default("all")
 
   ratings    Float @default(0)
   numReviews Int   @default(0)
@@ -90,7 +90,7 @@ model Image {
 
 model Category {
   id       String    @id @default(uuid())
-  name     String
+  name     String    @unique
   products Product[]
 }
 
