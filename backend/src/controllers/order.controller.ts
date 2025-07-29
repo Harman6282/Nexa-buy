@@ -6,7 +6,6 @@ import { ApiResponse } from "../utils/apiResponse";
 import { CreateOrderSchema } from "../schema/products";
 
 export const createOrder: any = async (req: Request, res: Response) => {
-  console.log("triggerd");
   const userId = (req?.user as JwtPayload)?.id;
   const parsed = CreateOrderSchema.safeParse(req.body);
   if (!parsed.success) {
