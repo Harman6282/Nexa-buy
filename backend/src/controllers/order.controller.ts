@@ -161,3 +161,80 @@ export const cancelOrder: any = async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, updatedOrder, "Order cancelled successfully"));
 };
+
+export const getMyOrderItems: any = async (req: Request, res: Response) => {
+  const userId = (req?.user as JwtPayload)?.id;
+
+  const orders = await prisma.order.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      status: true,
+      total: true,
+      createdAt: true,
+      address: true,
+      items: {
+        select: {
+          id: true,
+          quantity: true,
+          price: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+              images: {
+                select: {
+                  url: true,
+                },
+                take: 1,
+              },
+            },
+          },
+          variant: {
+            select: {
+              id: true,
+              size: true,
+              stock: true,
+              color: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!orders || orders.length === 0) {
+    throw new ApiError(404, "No orders found");
+  }
+
+  // Flatten all items into a single array with order info
+  const myOrderItems = {
+    items: orders.flatMap((order) =>
+      order.items.map((item) => ({
+        orderId: order.id,
+        status: order.status,
+        total: order.total,
+        date: order.createdAt,
+        address: order.address,
+        itemId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        productId: item.product.id,
+        productName: item.product.name,
+        image: item.product.images[0]?.url || null,
+        variantId: item.variant.id,
+        size: item.variant.size,
+        color: item.variant.color,
+        stock: item.variant.stock,
+        createdAt: order.createdAt,
+      }))
+    ),
+  };
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, myOrderItems, "Order items fetched successfully")
+    );
+};

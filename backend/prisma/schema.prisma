@@ -141,6 +141,7 @@ model Order {
   status    OrderStatus @default(PENDING)
   address   String
   createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt  @default(now())
 }
 
 model OrderItem {
@@ -153,4 +154,6 @@ model OrderItem {
   variantId String
   quantity  Int
   price     Float
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt @default(now())
 }
