@@ -148,16 +148,41 @@ export const getProductById: any = async (req: Request, res: Response) => {
 };
 
 export const getAllProducts: any = async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+
+  const skip = (page - 1) * limit;
+
+  if (isNaN(page) || isNaN(limit)) {
+    throw new ApiError(400, "Invalid page or limit parameter");
+  }
+  if (page < 1 || limit < 1) {
+    throw new ApiError(400, "Page and limit must be greater than 0");
+  }
+  if (limit > 100) {
+    throw new ApiError(400, "Limit cannot exceed 100");
+  }
+
+  console.log(page, limit);
   const products = await prisma.product.findMany({
     include: {
       category: true,
       images: true,
       variants: true,
     },
+    skip,
+    take: limit,
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   if (!products) {
     throw new ApiError(404, "Error fetching products");
+  }
+
+  if (products.length === 0) {
+    throw new ApiError(404, "No products found");
   }
 
   return res.status(200).json(new ApiResponse(200, products, "products found"));
@@ -216,5 +241,17 @@ export const getProductsByCategory: any = async (
   if (!products || []) {
     throw new ApiError(404, "No products of this category found");
   }
+  return res.status(200).json(new ApiResponse(200, products, "products found"));
+};
+
+export const collectionProducts: any = async (req: Request, res: Response) => {
+  const products = await prisma.product.findMany({
+    take: 5,
+  });
+
+  if (!products || products.length === 0) {
+    throw new ApiError(404, "No products found in this collection");
+  }
+
   return res.status(200).json(new ApiResponse(200, products, "products found"));
 };

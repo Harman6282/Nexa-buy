@@ -2,6 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { adminCheck, authenticate } from "../middlewares/auth/authenticate";
 import {
+  collectionProducts,
   createProduct,
   deleteProduct,
   getAllProducts,
@@ -30,9 +31,9 @@ productRoutes.delete(
   [authenticate, adminCheck],
   asyncHandler(deleteProduct)
 );
+productRoutes.get("/collection", asyncHandler(collectionProducts))
 productRoutes.get("/search", asyncHandler(getProductsByQuery));
 productRoutes.get("/:id", asyncHandler(getProductById));
 productRoutes.get("/", asyncHandler(getAllProducts));
 productRoutes.get("/category/:name", asyncHandler(getProductsByCategory));
-
 export default productRoutes;
