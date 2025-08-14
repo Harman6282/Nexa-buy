@@ -163,7 +163,6 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
     throw new ApiError(400, "Limit cannot exceed 100");
   }
 
-  console.log(page, limit);
   const products = await prisma.product.findMany({
     include: {
       category: true,
