@@ -195,7 +195,6 @@ export const getMyOrderItems: any = async (req: Request, res: Response) => {
               id: true,
               size: true,
               stock: true,
-              color: true,
             },
           },
         },
@@ -225,7 +224,6 @@ export const getMyOrderItems: any = async (req: Request, res: Response) => {
         image: item.product.images[0]?.url || null,
         variantId: item.variant.id,
         size: item.variant.size,
-        color: item.variant.color,
         stock: item.variant.stock,
         createdAt: order.createdAt,
       }))

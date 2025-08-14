@@ -32,20 +32,41 @@ export const createProduct: any = async (req: Request, res: Response) => {
 
   // upload images
   const files = req.files as Express.Multer.File[];
-  if (!files || files.length === 0) {
+
+  // if (!files || files.length === 0) {
+  //   throw new ApiError(400, "At least one product image is required");
+  // }
+
+  const uploadedImages: any = [];
+  if (files) {
+    for (const file of files) {
+      const result = await uploadOnCloudinary(file.path);
+
+      uploadedImages.push({
+        url: result.secure_url,
+        publicId: result.public_id,
+      });
+    }
+  }
+
+  let finalImages = uploadedImages;
+
+  // If no files uploaded, check for image URLs in req.body.imageUrls
+  if ((!files || files.length === 0) && Array.isArray(req.body.imageUrls)) {
+    finalImages = req.body.imageUrls
+      .filter((url: string) => typeof url === "string" && url.trim() !== "")
+      .map((url: string) => ({
+        url,
+        publicId: null,
+      }));
+  }
+
+  // If still no images, throw error
+  if (!finalImages || finalImages.length === 0) {
     throw new ApiError(400, "At least one product image is required");
   }
 
-  const uploadedImages: any = [];
-
-  for (const file of files) {
-    const result = await uploadOnCloudinary(file.path);
-
-    uploadedImages.push({
-      url: result.secure_url,
-      publicId: result.public_id,
-    });
-  }
+  console.log(finalImages)
 
   // Map image data for Prisma
 
@@ -61,7 +82,7 @@ export const createProduct: any = async (req: Request, res: Response) => {
       slug,
       categoryName,
       images: {
-        create: uploadedImages,
+        create: finalImages,
       },
       variants: {
         create: variants,
@@ -122,7 +143,21 @@ export const deleteProduct: any = async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, "Product deleted successfully"));
 };
+export const collectionProducts: any = async (req: Request, res: Response) => {
+  console.log("collectionProducts called");
+  const products = await prisma.product.findMany({
+    include: {
+      images: true,
+    },
+    take: 4,
+  });
 
+  if (!products || products.length === 0) {
+    throw new ApiError(404, "No products found in this collection");
+  }
+
+  return res.status(200).json(new ApiResponse(200, products, "products found"));
+};
 export const getProductById: any = async (req: Request, res: Response) => {
   console.log("getProductById called");
   const { id: productId } = req.params;
@@ -240,17 +275,5 @@ export const getProductsByCategory: any = async (
   if (!products || []) {
     throw new ApiError(404, "No products of this category found");
   }
-  return res.status(200).json(new ApiResponse(200, products, "products found"));
-};
-
-export const collectionProducts: any = async (req: Request, res: Response) => {
-  const products = await prisma.product.findMany({
-    take: 5,
-  });
-
-  if (!products || products.length === 0) {
-    throw new ApiError(404, "No products found in this collection");
-  }
-
   return res.status(200).json(new ApiResponse(200, products, "products found"));
 };

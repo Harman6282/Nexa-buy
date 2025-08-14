@@ -74,7 +74,6 @@ model ProductVariant {
   product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   size      String
-  color     String
   stock     Int
   OrderItem OrderItem[]
   cartItem  CartItem[]
@@ -82,7 +81,7 @@ model ProductVariant {
 
 model Image {
   id        String  @id @default(uuid())
-  publicId  String
+  publicId  String?
   url       String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
