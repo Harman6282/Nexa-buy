@@ -66,10 +66,6 @@ export const createProduct: any = async (req: Request, res: Response) => {
     throw new ApiError(400, "At least one product image is required");
   }
 
-  console.log(finalImages)
-
-  // Map image data for Prisma
-
   const slug =
     slugify(name, { replacement: "-", lower: true }) + "-" + nanoid(8);
   const product = await prisma.product.create({
@@ -144,7 +140,6 @@ export const deleteProduct: any = async (req: Request, res: Response) => {
     .json(new ApiResponse(200, "Product deleted successfully"));
 };
 export const collectionProducts: any = async (req: Request, res: Response) => {
-  console.log("collectionProducts called");
   const products = await prisma.product.findMany({
     include: {
       images: true,
