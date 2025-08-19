@@ -8,7 +8,7 @@ import { prisma } from "..";
 export const getCart: any = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload).id;
 
-  const cart = await prisma.cart.findUnique({
+  let cart = await prisma.cart.findUnique({
     where: { userId },
     include: {
       items: {
@@ -21,7 +21,17 @@ export const getCart: any = async (req: Request, res: Response) => {
   });
 
   if (!cart) {
-    throw new ApiError(404, "Cart not found");
+    cart = await prisma.cart.create({
+      data: { userId },
+      include: {
+        items: {
+          include: {
+            product: { include: { images: true } },
+            variant: true,
+          },
+        },
+      },
+    });
   }
 
   return res
