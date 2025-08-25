@@ -20,13 +20,13 @@ export const createAddress: any = async (req: Request, res: Response) => {
 
   const address = await prisma.address.create({
     data: {
-      lineOne,
-      lineTwo,
-      city,
-      state,
-      pincode,
-      country,
-      userId,
+      lineOne: lineOne.trim(),
+      lineTwo: lineTwo?.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      pincode: pincode.trim(),
+      country: country.trim(),
+      userId: userId.trim(),
     },
   });
 
@@ -78,7 +78,7 @@ export const updateAddress: any = async (req: Request, res: Response) => {
 export const deleteAddress: any = async (req: Request, res: Response) => {
   const addressId = req.params.id;
 
-  const address = await prisma.address.deleteMany({
+  const address = await prisma.address.delete({
     where: {
       id: addressId,
     },
@@ -90,7 +90,7 @@ export const deleteAddress: any = async (req: Request, res: Response) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Address deleted successfully"));
+    .json(new ApiResponse(200, null, "Address deleted successfully"));
 };
 
 export const getAllAddresses: any = async (req: Request, res: Response) => {

@@ -22,13 +22,13 @@ app.use(limiter);
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "http://192.168.1.41:3000"],
     credentials: true,
   })
 );
 
 export const prisma = new PrismaClient({
-  log: ["info"]
+  log: ["info"],
 });
 
 app.use("/api", rootRouter);

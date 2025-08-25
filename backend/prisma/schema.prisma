@@ -34,12 +34,12 @@ model User {
   imageUrl String?
   role     Role    @default(USER)
 
-  cart    Cart[]
-  address Address[]
-  order   Order[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  cart      Cart[]
+  address   Address[]
+  order     Order[]
+  wishlist  Wishlist[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   @@map("users")
 }
@@ -53,14 +53,14 @@ model Product {
   discount    Float  @default(0)
   brand       String
 
-  images    Image[]
-  cartItem  CartItem[]
-  variants  ProductVariant[]
-  orderItem OrderItem[]
-
+  images       Image[]
+  cartItem     CartItem[]
+  variants     ProductVariant[]
+  orderItem    OrderItem[]
+  wishlist     Wishlist[]
   // Category relation (many-to-one)
-  category     Category @relation(fields: [categoryName], references: [name])
-  categoryName String   @default("all")
+  category     Category         @relation(fields: [categoryName], references: [name])
+  categoryName String           @default("all")
 
   ratings    Float @default(0)
   numReviews Int   @default(0)
@@ -140,7 +140,7 @@ model Order {
   status    OrderStatus @default(PENDING)
   address   String
   createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt  @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
 }
 
 model OrderItem {
@@ -154,5 +154,16 @@ model OrderItem {
   quantity  Int
   price     Float
   createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, productId])
 }

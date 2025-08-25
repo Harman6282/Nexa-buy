@@ -3,7 +3,6 @@ import { ApiResponse } from "../utils/apiResponse";
 import { CreateProductSchema } from "../schema/products";
 import { ApiError } from "../utils/apiError";
 import slugify from "slugify";
-import { parse } from "path";
 import { nanoid } from "nanoid";
 import { prisma } from "..";
 import { uploadOnCloudinary } from "../utils/cloudinary";
@@ -179,7 +178,7 @@ export const getProductById: any = async (req: Request, res: Response) => {
 
 export const getAllProducts: any = async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
+  const limit = parseInt(req.query.limit as string) || 5;
 
   const skip = (page - 1) * limit;
 
@@ -197,14 +196,18 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
     include: {
       category: true,
       images: true,
-      variants: true,
+      variants: true
     },
     skip,
     take: limit,
     orderBy: {
       createdAt: "desc",
     },
+    
   });
+
+  const totalProducts = await prisma.product.count(); 
+  const totalPages = Math.ceil(totalProducts / limit);
 
   if (!products) {
     throw new ApiError(404, "Error fetching products");
@@ -214,7 +217,7 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
     throw new ApiError(404, "No products found");
   }
 
-  return res.status(200).json(new ApiResponse(200, products, "products found"));
+  return res.status(200).json(new ApiResponse(200, {products, totalPages}, "products found"));
 };
 
 export const getProductsByQuery: any = async (req: Request, res: Response) => {
