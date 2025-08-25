@@ -7,61 +7,98 @@ import { ApiResponse } from "../utils/apiResponse";
 export const addToWishlist: any = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload)?.id;
   const { productId } = req.body;
-  console.log("triggerd");
 
   if (!productId) {
     throw new ApiError(400, "Product Id is required");
   }
 
-  const existingUsersProduct = await prisma.wishlist.findFirst({
+  // Check if product already in wishlist
+  const existingItem = await prisma.wishlist.findFirst({
     where: {
       productId,
       userId,
     },
   });
 
-  if (existingUsersProduct) {
-    throw new ApiError(409, "product already is in wishlist");
+  if (existingItem) {
+    // If exists, remove it
+    await prisma.wishlist.delete({
+      where: {
+        id: existingItem.id,
+      },
+    });
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Removed from wishlist"));
   }
 
-  const product = await prisma.wishlist.create({
+  // If not exists, add it
+  const newItem = await prisma.wishlist.create({
     data: {
       userId,
       productId,
     },
   });
 
-  console.log("333333");
-
-  if (!product) {
+  if (!newItem) {
     throw new ApiError(500, "Error while adding to wishlist");
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, product, "Added to wishlist"));
+    .json(new ApiResponse(200, newItem, "Added to wishlist"));
 };
 
-export const getWishlist = async (req: Request, res: Response): Promise<void> => {
+export const getWishlist = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const userId = (req?.user as JwtPayload)?.id;
 
+    console.log("first");
+
     const wishlist = await prisma.wishlist.findMany({
       where: { userId },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            slug: true,
+            images: {
+              select: {
+                url: true,
+              },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
     if (!wishlist || wishlist.length === 0) {
       throw new ApiError(404, "Wishlist not found");
     }
+    const formattedWishlist = wishlist.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      name: item.product.name,
+      price: item.product.price,
+      image: item.product.images[0]?.url || null,
+      createdAt: item.createdAt,
+    }));
 
     res
       .status(200)
-      .json(new ApiResponse(200, wishlist, "Wishlist fetched successfully"));
+      .json(
+        new ApiResponse(200, formattedWishlist, "Wishlist fetched successfully")
+      );
   } catch (error) {
     throw new ApiError(500, "Something went wrong");
   }
 };
-
 
 export const deleteFromwishlist: any = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload)?.id;
@@ -78,7 +115,7 @@ export const deleteFromwishlist: any = async (req: Request, res: Response) => {
     },
   });
 
-  if (wishlist) {
+  if (!wishlist) {
     throw new ApiError(404, "Error while deleting wishlist product ");
   }
 
