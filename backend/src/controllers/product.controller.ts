@@ -196,17 +196,16 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
     include: {
       category: true,
       images: true,
-      variants: true
+      variants: true,
     },
     skip,
     take: limit,
     orderBy: {
       createdAt: "desc",
     },
-    
   });
 
-  const totalProducts = await prisma.product.count(); 
+  const totalProducts = await prisma.product.count();
   const totalPages = Math.ceil(totalProducts / limit);
 
   if (!products) {
@@ -217,7 +216,9 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
     throw new ApiError(404, "No products found");
   }
 
-  return res.status(200).json(new ApiResponse(200, {products, totalPages}, "products found"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { products, totalPages }, "products found"));
 };
 
 export const getProductsByQuery: any = async (req: Request, res: Response) => {

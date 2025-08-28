@@ -12,6 +12,10 @@ const wishlistRoutes: Router = Router();
 wishlistRoutes.get("/", [authenticate], asyncHandler(getWishlist));
 wishlistRoutes.post("/", [authenticate], asyncHandler(addToWishlist));
 wishlistRoutes.delete("/:id", [authenticate], asyncHandler(deleteFromwishlist));
-wishlistRoutes.delete("/clear/all", [authenticate], asyncHandler(clearwishlist));
+wishlistRoutes.delete(
+  "/clear/all",
+  [authenticate],
+  asyncHandler(clearwishlist)
+);
 
 export default wishlistRoutes;

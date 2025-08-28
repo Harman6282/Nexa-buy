@@ -87,9 +87,9 @@ export const me = async (req: Request, res: Response) => {
 
   const user = await prisma.user.findUnique({
     where: {
-      id: userId
+      id: userId,
     },
-    select:{
+    select: {
       id: true,
       name: true,
       email: true,
@@ -99,11 +99,9 @@ export const me = async (req: Request, res: Response) => {
       cart: true,
       createdAt: true,
       order: true,
-      updatedAt: true
-    }
-    
+      updatedAt: true,
+    },
   });
-
 
   res
     .status(200)
