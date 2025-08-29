@@ -222,8 +222,23 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
 };
 
 export const getProductsByQuery: any = async (req: Request, res: Response) => {
-  const q = req.query.q as string;
+  const q = (req.query.q as string) || "";
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.pageSize as string) || 10;
 
+  // Count total matching products
+  const totalItems = await prisma.product.count({
+    where: {
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+        { brand: { contains: q, mode: "insensitive" } },
+        { slug: { contains: q, mode: "insensitive" } },
+      ],
+    },
+  });
+
+  // Fetch paginated products
   const products = await prisma.product.findMany({
     where: {
       OR: [
@@ -233,19 +248,32 @@ export const getProductsByQuery: any = async (req: Request, res: Response) => {
         { slug: { contains: q, mode: "insensitive" } },
       ],
     },
-
     include: {
       category: true,
       images: true,
       variants: true,
     },
+    skip: (page - 1) * limit,
+    take: limit,
   });
 
   if (!products || products.length === 0) {
     throw new ApiError(404, "No products found");
   }
 
-  return res.status(200).json(new ApiResponse(200, products, "products found"));
+  const totalPages = Math.ceil(totalItems / limit);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        products,
+        totalItems,
+        totalPages,
+      },
+      "Products found"
+    )
+  );
 };
 
 export const getProductsByCategory: any = async (

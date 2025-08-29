@@ -28,7 +28,7 @@ app.use(
 );
 
 export const prisma = new PrismaClient({
-  log: ["info"],
+  log: ["query"],
 });
 
 app.use("/api", rootRouter);
