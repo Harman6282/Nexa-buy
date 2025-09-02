@@ -6,6 +6,7 @@ import slugify from "slugify";
 import { nanoid } from "nanoid";
 import { prisma } from "..";
 import { uploadOnCloudinary } from "../utils/cloudinary";
+import { JwtPayload } from "jsonwebtoken";
 
 export const createProduct: any = async (req: Request, res: Response) => {
   console.log("createProduct called");
@@ -178,7 +179,7 @@ export const getProductById: any = async (req: Request, res: Response) => {
 
 export const getAllProducts: any = async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 5;
+  const limit = parseInt(req.query.limit as string) || 10;
 
   const skip = (page - 1) * limit;
 
@@ -191,6 +192,8 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
   if (limit > 100) {
     throw new ApiError(400, "Limit cannot exceed 100");
   }
+
+
 
   const products = await prisma.product.findMany({
     include: {
