@@ -32,7 +32,7 @@ adminRoutes.put(
 );
 
 adminRoutes.put(
-  "/orderstatus/:id",
+  "/updateStatus/:id",
   [authenticate, adminCheck],
   asyncHandler(updateOrderStatus)
 );

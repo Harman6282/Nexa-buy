@@ -4,6 +4,9 @@ import { ApiResponse } from "../../utils/apiResponse";
 import { ApiError } from "../../utils/apiError";
 import { getAllOrders } from "../order.controller";
 import { JwtPayload } from "jsonwebtoken";
+import { OrderStatus } from "@prisma/client";
+
+ 
 
 export const createCategory: any = async (req: Request, res: Response) => {
   const { name } = req.body;
@@ -59,21 +62,29 @@ export const deleteCategory: any = (req: Request, res: Response) => {
 //? admin orders controllers
 
 export const updateOrderStatus: any = async (req: Request, res: Response) => {
-  console.log("first");
   const { id: orderId } = req.params;
   const { status } = req.body;
+  console.log(status);
 
   if (!status) {
     throw new ApiError(400, "Status is required");
   }
 
+  // ✅ validate against enum values
+  const statusUpper = String(status).toUpperCase() as OrderStatus;
+  if (!Object.values(OrderStatus).includes(statusUpper)) {
+    throw new ApiError(400, "Invalid status");
+  }
+
   const order = await prisma.order.update({
     where: { id: orderId },
-    data: { status },
+    data: { status: { set: statusUpper } },
   });
+
   if (!order) {
     throw new ApiError(404, "Order not found");
   }
+
   return res
     .status(200)
     .json(new ApiResponse(200, order, "Order status updated successfully"));
