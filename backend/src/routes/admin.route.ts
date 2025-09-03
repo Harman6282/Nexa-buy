@@ -5,17 +5,30 @@ import {
   createCategory,
   deleteCategory,
   getAllOrdersAdmin,
+  getDashboard,
   updateCategory,
   updateOrderStatus,
+  updateStock,
 } from "../controllers/admin/admin.controller";
 
 const adminRoutes: Router = Router();
-
 
 adminRoutes.get(
   "/getAllOrders",
   [authenticate, adminCheck],
   asyncHandler(getAllOrdersAdmin)
+);
+
+adminRoutes.get(
+  "/dashboard",
+  [authenticate, adminCheck],
+  asyncHandler(getDashboard)
+);
+
+adminRoutes.put(
+  "/updateStock/:variantId/:stock",
+  [authenticate, adminCheck],
+  asyncHandler(updateStock)
 );
 
 adminRoutes.put(

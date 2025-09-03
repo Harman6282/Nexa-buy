@@ -145,3 +145,47 @@ export const getAllOrdersAdmin: any = async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, formatted, "Orders fetched successfully"));
 };
+
+export const getDashboard: any = async (req: Request, res: Response) => {
+  const [totalOrders, totalSales, totalCustomers, totalProducts] =
+    await Promise.all([
+      prisma.order.count(),
+      prisma.order.aggregate({
+        _sum: { total: true },
+      }),
+      prisma.user.count(),
+      prisma.product.count(),
+    ]);
+
+  const formatted = {
+    totalOrders: totalOrders || 0,
+    totalSales: totalSales._sum.total || 0,
+    totalCustomers: totalCustomers || 0,
+    totalProducts: totalProducts || 0,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, formatted, "Dashboard fetched successfully"));
+};
+
+export const updateStock: any = async (req: Request, res: Response) => {
+  const { variantId, stock } = req.params;
+
+  if (!variantId || isNaN(Number(stock))) {
+    throw new ApiError(400, "Invalid variantId or stock value");
+  }
+
+  const updated = await prisma.productVariant.update({
+    where: {
+      id: variantId,
+    },
+    data: {
+      stock: Number(stock),
+    },
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updated, "Stock updated successfully"));
+};

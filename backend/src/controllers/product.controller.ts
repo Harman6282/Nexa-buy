@@ -307,3 +307,5 @@ export const getProductsByCategory: any = async (
   }
   return res.status(200).json(new ApiResponse(200, products, "products found"));
 };
+
+
