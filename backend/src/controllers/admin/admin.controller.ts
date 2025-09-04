@@ -6,8 +6,6 @@ import { getAllOrders } from "../order.controller";
 import { JwtPayload } from "jsonwebtoken";
 import { OrderStatus } from "@prisma/client";
 
- 
-
 export const createCategory: any = async (req: Request, res: Response) => {
   const { name } = req.body;
   if (!name) {
@@ -89,32 +87,6 @@ export const updateOrderStatus: any = async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, order, "Order status updated successfully"));
 };
-
-// export const updateVariantStock = async (
-//   req: Request,
-//   res: Response
-// ): Promise<Response> => {
-//   const { id } = req.params;
-//   const { stock } = req.body;
-
-//   if (!id) {
-//     throw new ApiError(401, "Enter valid product Id");
-//   }
-//   if (!stock) {
-//     throw new ApiError(400, "Stock is required");
-//   }
-
-//   const updatedVariant = await prisma.productVariant.update({
-//     where: { productId: id },
-//     data: { stock },
-//   });
-//   if (!updatedVariant) {
-//     throw new ApiError(400, "Failed to update stock");
-//   }
-//   return res
-//     .status(200)
-//     .json(new ApiResponse(200, updatedVariant, "Stock updated successfully"));
-// };
 
 export const getAllOrdersAdmin: any = async (req: Request, res: Response) => {
   const orders = await prisma.order.findMany({
@@ -199,4 +171,64 @@ export const updateStock: any = async (req: Request, res: Response) => {
   return res
     .status(200)
     .json(new ApiResponse(200, updated, "Stock updated successfully"));
+};
+
+export const getCustomersData: any = async (req: Request, res: Response) => {
+  try {
+    const [stats, customers] = await Promise.all([
+      prisma.order.aggregate({
+        _sum: { total: true },
+        _avg: { total: true },
+      }),
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          address: {
+            select: { city: true, country: true },
+            take: 1,
+          },
+          order: {
+            select: {
+              total: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          _count: { select: { order: true } },
+        },
+      }),
+    ]);
+
+    if (!stats || !customers) {
+      throw new ApiError(500, "Error while fetching customers data");
+    }
+
+    // format customers
+    const formattedCustomers = customers.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      address: u.address[0] || "",
+      ordersCount: u._count.order || 0,
+      totalSpent: u.order.reduce((acc, curr) => acc + curr.total, 0) || 0,
+      lastOrder: u.order[0]?.createdAt || null,
+    }));
+
+    const response = {
+      totalCustomers: customers.length,
+      revenue: stats._sum.total || 0,
+      avgOrderValue: stats._avg.total || 0,
+      customers: formattedCustomers,
+    };
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, response, "Customers data fetched successfully")
+      );
+  } catch (error) {
+    throw new ApiError(500, "Unexpected error while fetching customers data");
+  }
 };

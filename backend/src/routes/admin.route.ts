@@ -5,6 +5,7 @@ import {
   createCategory,
   deleteCategory,
   getAllOrdersAdmin,
+  getCustomersData,
   getDashboard,
   updateCategory,
   updateOrderStatus,
@@ -23,6 +24,11 @@ adminRoutes.get(
   "/dashboard",
   [authenticate, adminCheck],
   asyncHandler(getDashboard)
+);
+adminRoutes.get(
+  "/customers",
+  [authenticate, adminCheck],
+  asyncHandler(getCustomersData)
 );
 
 adminRoutes.put(
