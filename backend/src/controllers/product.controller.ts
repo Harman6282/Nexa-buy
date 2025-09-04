@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { prisma } from "..";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import { JwtPayload } from "jsonwebtoken";
+import { cache } from "../utils/cache";
 
 export const createProduct: any = async (req: Request, res: Response) => {
   console.log("createProduct called");
@@ -140,12 +141,19 @@ export const deleteProduct: any = async (req: Request, res: Response) => {
     .json(new ApiResponse(200, "Product deleted successfully"));
 };
 export const collectionProducts: any = async (req: Request, res: Response) => {
-  const products = await prisma.product.findMany({
-    include: {
-      images: true,
-    },
-    take: 4,
-  });
+  let products;
+  const cachekey = "collection_products";
+  if (cache.has(cachekey)) {
+    products = JSON.parse(cache.get(cachekey)!);
+  } else {
+    products = await prisma.product.findMany({
+      include: {
+        images: true,
+      },
+      take: 4,
+    });
+    cache.set(cachekey, JSON.stringify(products));
+  }
 
   if (!products || products.length === 0) {
     throw new ApiError(404, "No products found in this collection");
@@ -180,7 +188,6 @@ export const getProductById: any = async (req: Request, res: Response) => {
 export const getAllProducts: any = async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
-
   const skip = (page - 1) * limit;
 
   if (isNaN(page) || isNaN(limit)) {
@@ -193,22 +200,34 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
     throw new ApiError(400, "Limit cannot exceed 100");
   }
 
+  const cacheKey = `products_page_${page}_limit_${limit}`;
 
+  let products;
+  let totalProducts;
 
-  const products = await prisma.product.findMany({
-    include: {
-      category: true,
-      images: true,
-      variants: true,
-    },
-    skip,
-    take: limit,
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  if (cache.has(cacheKey) && cache.has("totalProducts")) {
+    products = JSON.parse(cache.get(cacheKey)!);
+    totalProducts = JSON.parse(cache.get("totalProducts")!);
+  } else {
+    products = await prisma.product.findMany({
+      include: {
+        category: true,
+        images: true,
+        variants: true,
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-  const totalProducts = await prisma.product.count();
+    totalProducts = await prisma.product.count();
+
+    cache.set(cacheKey, JSON.stringify(products));
+    cache.set("totalProducts", JSON.stringify(totalProducts));
+  }
+
   const totalPages = Math.ceil(totalProducts / limit);
 
   if (!products) {
@@ -221,7 +240,7 @@ export const getAllProducts: any = async (req: Request, res: Response) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { products, totalPages }, "products found"));
+    .json(new ApiResponse(200, { products, totalPages }, "Products found"));
 };
 
 export const getProductsByQuery: any = async (req: Request, res: Response) => {
@@ -307,5 +326,3 @@ export const getProductsByCategory: any = async (
   }
   return res.status(200).json(new ApiResponse(200, products, "products found"));
 };
-
-

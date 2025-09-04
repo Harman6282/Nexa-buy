@@ -77,9 +77,17 @@ export const login: any = async (req: Request, res: Response) => {
     throw new ApiError(401, "Invalid Password");
   }
 
-  generateToken(user, res);
+  const newUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    createdAt: user.createdAt,
+  };
 
-  res.status(200).json(new ApiResponse(200, user, "Logged in"));
+  generateToken(newUser, res);
+
+  res.status(200).json(new ApiResponse(200, newUser, "Logged in"));
 };
 
 export const me = async (req: Request, res: Response) => {
@@ -91,6 +99,7 @@ export const me = async (req: Request, res: Response) => {
     },
     select: {
       id: true,
+      role: true,
       name: true,
       email: true,
       imageUrl: true,

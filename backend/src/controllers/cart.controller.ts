@@ -4,25 +4,18 @@ import { JwtPayload } from "jsonwebtoken";
 import { AddToCartSchema } from "../schema/products";
 import { ApiError } from "../utils/apiError";
 import { prisma } from "..";
+import { cache } from "../utils/cache";
 
 export const getCart: any = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload).id;
-
-  let cart = await prisma.cart.findUnique({
-    where: { userId },
-    include: {
-      items: {
-        include: {
-          product: { include: { images: true } },
-          variant: true,
-        },
-      },
-    },
-  });
-
-  if (!cart) {
-    cart = await prisma.cart.create({
-      data: { userId },
+  const cart_key = "cart";
+  let cart;
+  if (cache.has(cart_key)) {
+    cart = JSON.parse(cache.get(cart_key)!);
+  }
+  {
+    cart = await prisma.cart.findUnique({
+      where: { userId },
       include: {
         items: {
           include: {
@@ -32,6 +25,22 @@ export const getCart: any = async (req: Request, res: Response) => {
         },
       },
     });
+
+    if (!cart) {
+      cart = await prisma.cart.create({
+        data: { userId },
+        include: {
+          items: {
+            include: {
+              product: { include: { images: true } },
+              variant: true,
+            },
+          },
+        },
+      });
+    }
+
+    cache.set(cart_key, JSON.stringify(cart));
   }
 
   return res
@@ -94,6 +103,8 @@ export const addToCart: any = async (req: Request, res: Response) => {
       },
     });
 
+    cache.del("cart");
+
     return res
       .status(200)
       .json(new ApiResponse(200, newItem, "Item added to cart"));
@@ -134,7 +145,7 @@ export const updateCartItem: any = async (req: Request, res: Response) => {
       variantId: variantId || cartItem.variantId,
     },
   });
-
+  cache.del("cart");
   return res.status(200).json(new ApiResponse(200, updateItem, "Item updated"));
 };
 
@@ -167,7 +178,7 @@ export const removeItemFromCart: any = async (req: Request, res: Response) => {
       id: cartItemId,
     },
   });
-
+  cache.del("cart");
   return res
     .status(200)
     .json(new ApiResponse(200, cartItem, "Item removed from cart"));
@@ -189,7 +200,7 @@ export const clearCart: any = async (req: Request, res: Response) => {
       cartId: cart.id,
     },
   });
-
+  cache.del("cart");
   return res
     .status(200)
     .json(new ApiResponse(200, null, "Cart cleared successfully"));
