@@ -10,7 +10,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { cache } from "../utils/cache";
 
 export const createProduct: any = async (req: Request, res: Response) => {
-  console.log("createProduct called");
+  // Parse variants if sent as string
   if (typeof req.body.variants === "string") {
     try {
       req.body.variants = JSON.parse(req.body.variants);
@@ -19,6 +19,7 @@ export const createProduct: any = async (req: Request, res: Response) => {
     }
   }
 
+  // Validate input
   const parsed = CreateProductSchema.safeParse(req.body);
   if (!parsed.success) {
     throw new ApiError(
@@ -31,44 +32,28 @@ export const createProduct: any = async (req: Request, res: Response) => {
   const { name, description, price, brand, discount, categoryName, variants } =
     parsed.data;
 
-  // upload images
+  // Get uploaded files
   const files = req.files as Express.Multer.File[];
 
-  // if (!files || files.length === 0) {
-  //   throw new ApiError(400, "At least one product image is required");
-  // }
-
-  const uploadedImages: any = [];
-  if (files) {
-    for (const file of files) {
-      const result = await uploadOnCloudinary(file.path);
-
-      uploadedImages.push({
-        url: result.secure_url,
-        publicId: result.public_id,
-      });
-    }
-  }
-
-  let finalImages = uploadedImages;
-
-  // If no files uploaded, check for image URLs in req.body.imageUrls
-  if ((!files || files.length === 0) && Array.isArray(req.body.imageUrls)) {
-    finalImages = req.body.imageUrls
-      .filter((url: string) => typeof url === "string" && url.trim() !== "")
-      .map((url: string) => ({
-        url,
-        publicId: null,
-      }));
-  }
-
-  // If still no images, throw error
-  if (!finalImages || finalImages.length === 0) {
+  if (!files || files.length === 0) {
     throw new ApiError(400, "At least one product image is required");
   }
 
+  // Upload each file to Cloudinary
+  const uploadedImages: { url: string; publicId: string }[] = [];
+  for (const file of files) {
+    const result = await uploadOnCloudinary(file.path);
+
+    uploadedImages.push({
+      url: result.secure_url,
+      publicId: result.public_id,
+    });
+  }
+
+  // Create product with uploaded images
   const slug =
     slugify(name, { replacement: "-", lower: true }) + "-" + nanoid(8);
+
   const product = await prisma.product.create({
     data: {
       name,
@@ -79,7 +64,7 @@ export const createProduct: any = async (req: Request, res: Response) => {
       slug,
       categoryName,
       images: {
-        create: finalImages,
+        create: uploadedImages,
       },
       variants: {
         create: variants,
@@ -93,7 +78,7 @@ export const createProduct: any = async (req: Request, res: Response) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, product, "product created successfully"));
+    .json(new ApiResponse(200, product, "Product created successfully"));
 };
 
 export const updateProduct: any = async (req: Request, res: Response) => {
@@ -162,7 +147,6 @@ export const collectionProducts: any = async (req: Request, res: Response) => {
   return res.status(200).json(new ApiResponse(200, products, "products found"));
 };
 export const getProductById: any = async (req: Request, res: Response) => {
-  console.log("getProductById called");
   const { id: productId } = req.params;
   if (!productId) {
     throw new ApiError(401, "Enter valid product Id");
@@ -318,8 +302,6 @@ export const getProductsByCategory: any = async (
       variants: true,
     },
   });
-
-  console.log(products);
 
   if (!products || []) {
     throw new ApiError(404, "No products of this category found");

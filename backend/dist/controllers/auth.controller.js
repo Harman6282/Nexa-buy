@@ -12,13 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.adminTest = exports.authenticateTest = exports.login = exports.signup = void 0;
+exports.logout = exports.me = exports.login = exports.signup = void 0;
 const users_1 = require("../schema/users");
 const __1 = require("..");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const generateToken_1 = require("../utils/generateToken");
 const apiResponse_1 = require("../utils/apiResponse");
 const apiError_1 = require("../utils/apiError");
+const cache_1 = require("../utils/cache");
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const parsed = users_1.SignUpSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -69,25 +70,56 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!isPasswordValid) {
         throw new apiError_1.ApiError(401, "Invalid Password");
     }
-    (0, generateToken_1.generateToken)(user, res);
-    res.status(200).json(new apiResponse_1.ApiResponse(200, user, "Logged in"));
+    const newUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+    };
+    (0, generateToken_1.generateToken)(newUser, res);
+    res.status(200).json(new apiResponse_1.ApiResponse(200, newUser, "Logged in"));
 });
 exports.login = login;
-const authenticateTest = (req, res) => {
-    const user = req.user;
-    res.status(200).json(new apiResponse_1.ApiResponse(200, user, " user Test successful"));
-};
-exports.authenticateTest = authenticateTest;
-const adminTest = (req, res) => {
-    res.status(200).json(new apiResponse_1.ApiResponse(200, {}, "admin Test successful"));
-};
-exports.adminTest = adminTest;
+const me = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = (req === null || req === void 0 ? void 0 : req.user).id;
+    let user;
+    if (cache_1.cache.has("logged_user")) {
+        user = JSON.parse(cache_1.cache.get("logged_user"));
+    }
+    else {
+        user = yield __1.prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+            select: {
+                id: true,
+                role: true,
+                name: true,
+                email: true,
+                imageUrl: true,
+                address: true,
+                _count: true,
+                cart: true,
+                createdAt: true,
+                order: true,
+                updatedAt: true,
+            },
+        });
+        cache_1.cache.set("logged_user", JSON.stringify(user));
+    }
+    res
+        .status(200)
+        .json(new apiResponse_1.ApiResponse(200, user, " user fetched successfully"));
+});
+exports.me = me;
 const logout = (req, res) => {
     res.clearCookie("accessToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
     });
+    cache_1.cache.del("logged_user");
     res.status(200).json(new apiResponse_1.ApiResponse(200, {}, "Logged out successfully"));
 };
 exports.logout = logout;

@@ -6,6 +6,7 @@ import { generateToken } from "../utils/generateToken";
 import { ApiResponse } from "../utils/apiResponse";
 import { ApiError } from "../utils/apiError";
 import { JwtPayload } from "jsonwebtoken";
+import { cache } from "../utils/cache";
 export const signup: any = async (req: Request, res: Response) => {
   const parsed = SignUpSchema.safeParse(req.body);
 
@@ -92,32 +93,35 @@ export const login: any = async (req: Request, res: Response) => {
 
 export const me = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload).id;
+  let user;
+  if (cache.has("logged_user")) {
+    user = JSON.parse(cache.get("logged_user")!);
+  } else {
+    user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        role: true,
+        name: true,
+        email: true,
+        imageUrl: true,
+        address: true,
+        _count: true,
+        cart: true,
+        createdAt: true,
+        order: true,
+        updatedAt: true,
+      },
+    });
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-    select: {
-      id: true,
-      role: true,
-      name: true,
-      email: true,
-      imageUrl: true,
-      address: true,
-      _count: true,
-      cart: true,
-      createdAt: true,
-      order: true,
-      updatedAt: true,
-    },
-  });
+    cache.set("logged_user", JSON.stringify(user));
+  }
 
   res
     .status(200)
     .json(new ApiResponse(200, user, " user fetched successfully"));
-};
-export const adminTest = (req: Request, res: Response) => {
-  res.status(200).json(new ApiResponse(200, {}, "admin Test successful"));
 };
 
 export const logout = (req: Request, res: Response) => {
@@ -126,5 +130,7 @@ export const logout = (req: Request, res: Response) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
   });
+
+  cache.del("logged_user");
   res.status(200).json(new ApiResponse(200, {}, "Logged out successfully"));
 };

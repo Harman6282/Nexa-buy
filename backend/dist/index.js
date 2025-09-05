@@ -45,9 +45,21 @@ const secrets_1 = require("./secrets");
 const client_1 = require("@prisma/client");
 const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const cors_1 = __importDefault(require("cors"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
+const limiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: "Request limit exceeded. Please try again later.",
+});
+app.use(limiter);
+app.use((0, cors_1.default)({
+    origin: ["http://localhost:3000", "http://192.168.1.41:3000"],
+    credentials: true,
+}));
 exports.prisma = new client_1.PrismaClient({
     log: ["query"],
 });

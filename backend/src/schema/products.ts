@@ -7,12 +7,15 @@ export const CreateProductSchema = z.object({
   discount: z.coerce.number().default(0),
   brand: string().min(1, "Product brand is required"),
   categoryName: string().min(1, "Product category is required"),
-  imageUrls: z.array(string()).nonempty("At least one image URL is required").optional(),
+  imageUrls: z
+    .array(string())
+    .nonempty("At least one image URL is required")
+    .optional(),
   variants: z
     .array(
       z.object({
         size: z.string().min(1),
-        stock: z.number().int().nonnegative(),
+        stock: z.coerce.number().int().nonnegative(),
       })
     )
     .nonempty("At least one variant is required"),

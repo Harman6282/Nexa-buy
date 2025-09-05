@@ -8,6 +8,5 @@ const authRoutes = (0, express_1.Router)();
 authRoutes.post("/signup", (0, asyncHandler_1.asyncHandler)(auth_controller_1.signup));
 authRoutes.post("/login", (0, asyncHandler_1.asyncHandler)(auth_controller_1.login));
 authRoutes.post("/logout", [authenticate_1.authenticate], (0, asyncHandler_1.asyncHandler)(auth_controller_1.logout));
-authRoutes.post("/protected", [authenticate_1.authenticate], (0, asyncHandler_1.asyncHandler)(auth_controller_1.authenticateTest));
-authRoutes.post("/adminpage", [authenticate_1.authenticate, authenticate_1.adminCheck], (0, asyncHandler_1.asyncHandler)(auth_controller_1.adminTest));
+authRoutes.get("/me", [authenticate_1.authenticate], (0, asyncHandler_1.asyncHandler)(auth_controller_1.me));
 exports.default = authRoutes;

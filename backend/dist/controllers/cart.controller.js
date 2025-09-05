@@ -14,21 +14,40 @@ const apiResponse_1 = require("../utils/apiResponse");
 const products_1 = require("../schema/products");
 const apiError_1 = require("../utils/apiError");
 const __1 = require("..");
+const cache_1 = require("../utils/cache");
 const getCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = (req === null || req === void 0 ? void 0 : req.user).id;
-    const cart = yield __1.prisma.cart.findUnique({
-        where: { userId },
-        include: {
-            items: {
-                include: {
-                    product: true,
-                    variant: true,
+    const cart_key = "cart";
+    let cart;
+    if (cache_1.cache.has(cart_key)) {
+        cart = JSON.parse(cache_1.cache.get(cart_key));
+    }
+    {
+        cart = yield __1.prisma.cart.findUnique({
+            where: { userId },
+            include: {
+                items: {
+                    include: {
+                        product: { include: { images: true } },
+                        variant: true,
+                    },
                 },
             },
-        },
-    });
-    if (!cart) {
-        throw new apiError_1.ApiError(404, "Cart not found");
+        });
+        if (!cart) {
+            cart = yield __1.prisma.cart.create({
+                data: { userId },
+                include: {
+                    items: {
+                        include: {
+                            product: { include: { images: true } },
+                            variant: true,
+                        },
+                    },
+                },
+            });
+        }
+        cache_1.cache.set(cart_key, JSON.stringify(cart));
     }
     return res
         .status(200)
@@ -80,6 +99,7 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 quantity: parsed.data.quantity,
             },
         });
+        cache_1.cache.del("cart");
         return res
             .status(200)
             .json(new apiResponse_1.ApiResponse(200, newItem, "Item added to cart"));
@@ -114,6 +134,7 @@ const updateCartItem = (req, res) => __awaiter(void 0, void 0, void 0, function*
             variantId: variantId || cartItem.variantId,
         },
     });
+    cache_1.cache.del("cart");
     return res.status(200).json(new apiResponse_1.ApiResponse(200, updateItem, "Item updated"));
 });
 exports.updateCartItem = updateCartItem;
@@ -141,6 +162,7 @@ const removeItemFromCart = (req, res) => __awaiter(void 0, void 0, void 0, funct
             id: cartItemId,
         },
     });
+    cache_1.cache.del("cart");
     return res
         .status(200)
         .json(new apiResponse_1.ApiResponse(200, cartItem, "Item removed from cart"));
@@ -159,6 +181,7 @@ const clearCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             cartId: cart.id,
         },
     });
+    cache_1.cache.del("cart");
     return res
         .status(200)
         .json(new apiResponse_1.ApiResponse(200, null, "Cart cleared successfully"));

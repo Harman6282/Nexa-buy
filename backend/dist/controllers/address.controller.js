@@ -23,13 +23,13 @@ const createAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { lineOne, lineTwo, city, pincode, country, state } = parsed.data;
     const address = yield __1.prisma.address.create({
         data: {
-            lineOne,
-            lineTwo,
-            city,
-            state,
-            pincode,
-            country,
-            userId,
+            lineOne: lineOne.trim(),
+            lineTwo: lineTwo === null || lineTwo === void 0 ? void 0 : lineTwo.trim(),
+            city: city.trim(),
+            state: state.trim(),
+            pincode: pincode.trim(),
+            country: country.trim(),
+            userId: userId.trim(),
         },
     });
     if (!address) {
@@ -74,7 +74,7 @@ const updateAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.updateAddress = updateAddress;
 const deleteAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const addressId = req.params.id;
-    const address = yield __1.prisma.address.deleteMany({
+    const address = yield __1.prisma.address.delete({
         where: {
             id: addressId,
         },
@@ -84,7 +84,7 @@ const deleteAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     return res
         .status(200)
-        .json(new apiResponse_1.ApiResponse(200, "Address deleted successfully"));
+        .json(new apiResponse_1.ApiResponse(200, null, "Address deleted successfully"));
 });
 exports.deleteAddress = deleteAddress;
 const getAllAddresses = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

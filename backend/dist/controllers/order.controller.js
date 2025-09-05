@@ -9,14 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelOrder = exports.getSingleOrder = exports.getAllOrders = exports.createOrder = void 0;
+exports.getMyOrderItems = exports.cancelOrder = exports.getSingleOrder = exports.getAllOrders = exports.createOrder = void 0;
 const apiError_1 = require("../utils/apiError");
 const __1 = require("..");
 const apiResponse_1 = require("../utils/apiResponse");
 const products_1 = require("../schema/products");
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    console.log("triggerd");
     const userId = (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.id;
     const parsed = products_1.CreateOrderSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -152,3 +151,74 @@ const cancelOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         .json(new apiResponse_1.ApiResponse(200, updatedOrder, "Order cancelled successfully"));
 });
 exports.cancelOrder = cancelOrder;
+const getMyOrderItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userId = (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.id;
+    const orders = yield __1.prisma.order.findMany({
+        where: { userId },
+        select: {
+            id: true,
+            status: true,
+            total: true,
+            createdAt: true,
+            address: true,
+            items: {
+                select: {
+                    id: true,
+                    quantity: true,
+                    price: true,
+                    product: {
+                        select: {
+                            id: true,
+                            name: true,
+                            images: {
+                                select: {
+                                    url: true,
+                                },
+                                take: 1,
+                            },
+                        },
+                    },
+                    variant: {
+                        select: {
+                            id: true,
+                            size: true,
+                            stock: true,
+                        },
+                    },
+                },
+            },
+        },
+        orderBy: { createdAt: "desc" },
+    });
+    if (!orders || orders.length === 0) {
+        throw new apiError_1.ApiError(404, "No orders found");
+    }
+    // Flatten all items into a single array with order info
+    const myOrderItems = {
+        items: orders.flatMap((order) => order.items.map((item) => {
+            var _a;
+            return ({
+                orderId: order.id,
+                status: order.status,
+                total: order.total,
+                date: order.createdAt,
+                address: order.address,
+                itemId: item.id,
+                quantity: item.quantity,
+                price: item.price,
+                productId: item.product.id,
+                productName: item.product.name,
+                image: ((_a = item.product.images[0]) === null || _a === void 0 ? void 0 : _a.url) || null,
+                variantId: item.variant.id,
+                size: item.variant.size,
+                stock: item.variant.stock,
+                createdAt: order.createdAt,
+            });
+        })),
+    };
+    return res
+        .status(200)
+        .json(new apiResponse_1.ApiResponse(200, myOrderItems, "Order items fetched successfully"));
+});
+exports.getMyOrderItems = getMyOrderItems;

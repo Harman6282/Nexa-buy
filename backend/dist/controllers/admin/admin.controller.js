@@ -9,29 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.updateOrderStatus = void 0;
+exports.getCustomersData = exports.updateStock = exports.getDashboard = exports.getAllOrdersAdmin = exports.updateOrderStatus = exports.deleteCategory = exports.updateCategory = exports.createCategory = void 0;
 const __1 = require("../..");
 const apiResponse_1 = require("../../utils/apiResponse");
 const apiError_1 = require("../../utils/apiError");
-const updateOrderStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("first");
-    const { id: orderId } = req.params;
-    const { status } = req.body;
-    if (!status) {
-        throw new apiError_1.ApiError(400, "Status is required");
-    }
-    const order = yield __1.prisma.order.update({
-        where: { id: orderId },
-        data: { status },
-    });
-    if (!order) {
-        throw new apiError_1.ApiError(404, "Order not found");
-    }
-    return res
-        .status(200)
-        .json(new apiResponse_1.ApiResponse(200, order, "Order status updated successfully"));
-});
-exports.updateOrderStatus = updateOrderStatus;
+const client_1 = require("@prisma/client");
 const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name } = req.body;
     if (!name) {
@@ -83,3 +65,165 @@ const deleteCategory = (req, res) => {
         .json(new apiResponse_1.ApiResponse(200, category, "Category deleted successfully"));
 };
 exports.deleteCategory = deleteCategory;
+//? admin orders controllers
+const updateOrderStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id: orderId } = req.params;
+    const { status } = req.body;
+    console.log(status);
+    if (!status) {
+        throw new apiError_1.ApiError(400, "Status is required");
+    }
+    // ✅ validate against enum values
+    const statusUpper = String(status).toUpperCase();
+    if (!Object.values(client_1.OrderStatus).includes(statusUpper)) {
+        throw new apiError_1.ApiError(400, "Invalid status");
+    }
+    const order = yield __1.prisma.order.update({
+        where: { id: orderId },
+        data: { status: { set: statusUpper } },
+    });
+    if (!order) {
+        throw new apiError_1.ApiError(404, "Order not found");
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.ApiResponse(200, order, "Order status updated successfully"));
+});
+exports.updateOrderStatus = updateOrderStatus;
+const getAllOrdersAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const orders = yield __1.prisma.order.findMany({
+        include: {
+            items: {
+                include: {
+                    variant: true,
+                    product: {
+                        include: {
+                            images: true,
+                        },
+                    },
+                },
+            },
+            user: {
+                select: {
+                    name: true,
+                    email: true,
+                },
+            },
+        },
+    });
+    const formatted = orders.map((o) => {
+        var _a, _b;
+        return ({
+            id: o.id,
+            name: (_a = o === null || o === void 0 ? void 0 : o.user) === null || _a === void 0 ? void 0 : _a.name,
+            email: (_b = o === null || o === void 0 ? void 0 : o.user) === null || _b === void 0 ? void 0 : _b.email,
+            items: o === null || o === void 0 ? void 0 : o.items,
+            total: o === null || o === void 0 ? void 0 : o.total,
+            status: o === null || o === void 0 ? void 0 : o.status,
+            createdAt: o === null || o === void 0 ? void 0 : o.createdAt,
+        });
+    });
+    if (!orders || orders.length === 0) {
+        throw new apiError_1.ApiError(404, "No orders found");
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.ApiResponse(200, formatted, "Orders fetched successfully"));
+});
+exports.getAllOrdersAdmin = getAllOrdersAdmin;
+const getDashboard = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const [totalOrders, totalSales, totalCustomers, totalProducts] = yield Promise.all([
+        __1.prisma.order.count(),
+        __1.prisma.order.aggregate({
+            _sum: { total: true },
+        }),
+        __1.prisma.user.count(),
+        __1.prisma.product.count(),
+    ]);
+    const formatted = {
+        totalOrders: totalOrders || 0,
+        totalSales: totalSales._sum.total || 0,
+        totalCustomers: totalCustomers || 0,
+        totalProducts: totalProducts || 0,
+    };
+    return res
+        .status(200)
+        .json(new apiResponse_1.ApiResponse(200, formatted, "Dashboard fetched successfully"));
+});
+exports.getDashboard = getDashboard;
+const updateStock = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { variantId, stock } = req.params;
+    if (!variantId || isNaN(Number(stock))) {
+        throw new apiError_1.ApiError(400, "Invalid variantId or stock value");
+    }
+    const updated = yield __1.prisma.productVariant.update({
+        where: {
+            id: variantId,
+        },
+        data: {
+            stock: Number(stock),
+        },
+    });
+    return res
+        .status(200)
+        .json(new apiResponse_1.ApiResponse(200, updated, "Stock updated successfully"));
+});
+exports.updateStock = updateStock;
+const getCustomersData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const [stats, customers] = yield Promise.all([
+            __1.prisma.order.aggregate({
+                _sum: { total: true },
+                _avg: { total: true },
+            }),
+            __1.prisma.user.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    address: {
+                        select: { city: true, country: true },
+                        take: 1,
+                    },
+                    order: {
+                        select: {
+                            total: true,
+                            createdAt: true,
+                        },
+                        orderBy: { createdAt: "desc" },
+                    },
+                    _count: { select: { order: true } },
+                },
+            }),
+        ]);
+        if (!stats || !customers) {
+            throw new apiError_1.ApiError(500, "Error while fetching customers data");
+        }
+        // format customers
+        const formattedCustomers = customers.map((u) => {
+            var _a;
+            return ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                address: u.address[0] || "",
+                ordersCount: u._count.order || 0,
+                totalSpent: u.order.reduce((acc, curr) => acc + curr.total, 0) || 0,
+                lastOrder: ((_a = u.order[0]) === null || _a === void 0 ? void 0 : _a.createdAt) || null,
+            });
+        });
+        const response = {
+            totalCustomers: customers.length,
+            revenue: stats._sum.total || 0,
+            avgOrderValue: stats._avg.total || 0,
+            customers: formattedCustomers,
+        };
+        return res
+            .status(200)
+            .json(new apiResponse_1.ApiResponse(200, response, "Customers data fetched successfully"));
+    }
+    catch (error) {
+        throw new apiError_1.ApiError(500, "Unexpected error while fetching customers data");
+    }
+});
+exports.getCustomersData = getCustomersData;
