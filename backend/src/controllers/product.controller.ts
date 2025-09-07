@@ -87,23 +87,75 @@ export const updateProduct: any = async (req: Request, res: Response) => {
     throw new ApiError(401, "Enter valid product Id");
   }
 
-  const body = req.body;
-  const product = await prisma.product.update({
-    where: {
-      id: productId,
-    },
-    data: {
-      ...body,
-    },
-  });
+  const { name, description, price, brand, discount, categoryName, variants } =
+    req.body;
 
-  if (!product) {
-    throw new ApiError(404, "Product not found");
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update product
+      const product = await tx.product.update({
+        where: { id: productId },
+        data: {
+          name,
+          description,
+          price,
+          discount,
+          brand,
+          categoryName,
+        },
+      });
+
+      if (!product) throw new ApiError(404, "Product not found");
+
+      // 2. Get existing variants from DB
+      const existingVariants = await tx.productVariant.findMany({
+        where: { productId },
+      });
+
+      const incomingIds = variants
+        .filter((v: any) => v.id)
+        .map((v: any) => v.id);
+      const existingIds = existingVariants.map((v) => v.id);
+
+      // 3. Delete variants that are missing in the request
+      const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
+      if (toDelete.length > 0) {
+        await tx.productVariant.deleteMany({
+          where: { id: { in: toDelete } },
+        });
+      }
+
+      // 4. Upsert variants (update existing, create new)
+      const updatedVariants = await Promise.all(
+        variants.map((v: any) =>
+          v.id
+            ? tx.productVariant.update({
+                where: { id: v.id },
+                data: { size: v.size, stock: v.stock },
+              })
+            : tx.productVariant.create({
+                data: { size: v.size, stock: v.stock, productId },
+              })
+        )
+      );
+
+      if (!updatedVariants) {
+        throw new ApiError(
+          404,
+          "Failed to update variants while updating product"
+        );
+      }
+
+      return { product, variants: updatedVariants };
+    });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Product updated successfully"));
+  } catch (error) {
+    console.error(error);
+    throw new ApiError(500, "Something went wrong while updating product");
   }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, product, "product updated successfully"));
 };
 
 export const deleteProduct: any = async (req: Request, res: Response) => {
