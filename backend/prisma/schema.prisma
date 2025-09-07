@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -127,10 +126,15 @@ model Address {
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  items     OrderItem[]
+  id                String             @id @default(uuid())
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  items             OrderItem[]
+  razorpayOrderId   String             @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+  paymentStatus     OrderPaymentStatus @default(PENDING)
+
   total     Float
   status    OrderStatus @default(PENDING)
   address   String
@@ -162,4 +166,11 @@ model Wishlist {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, productId])
+}
+
+enum OrderPaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
 }

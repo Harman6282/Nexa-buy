@@ -4,6 +4,38 @@ import { ApiError } from "../utils/apiError";
 import { prisma } from "..";
 import { ApiResponse } from "../utils/apiResponse";
 import { CreateOrderSchema } from "../schema/products";
+import razorpayInstance from "../utils/razorpay";
+import crypto from "crypto";
+
+export const verifyPayment: any = async (req: Request, res: Response) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+    req.body;
+
+  const sign = razorpay_order_id + "|" + razorpay_payment_id;
+  const expectedSign = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET as string)
+    .update(sign.toString())
+    .digest("hex");
+
+  if (razorpay_signature !== expectedSign) {
+    throw new ApiError(400, "Invalid payment signature");
+  }
+
+  // update order status
+  const updatedOrder = await prisma.order.update({
+    where: { razorpayOrderId: razorpay_order_id },
+    data: {
+      paymentStatus: "PAID",
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+    },
+    include: { items: true },
+  });
+
+  return res.json(
+    new ApiResponse(200, updatedOrder, "Payment verified successfully")
+  );
+};
 
 export const createOrder: any = async (req: Request, res: Response) => {
   const userId = (req?.user as JwtPayload)?.id;
@@ -46,6 +78,15 @@ export const createOrder: any = async (req: Request, res: Response) => {
     return acc + item.quantity * item.product.price;
   }, 0);
 
+  const options = {
+    amount: total * 100,
+    currency: "INR",
+    receipt: `receipt_${Date.now()}`,
+  };
+
+  //? create razorpay order here
+  const razorpayOrder = await razorpayInstance.orders.create(options);
+
   const newOrder = await prisma.order.create({
     data: {
       userId,
@@ -58,6 +99,8 @@ export const createOrder: any = async (req: Request, res: Response) => {
           price: item.product.price,
         })),
       },
+      razorpayOrderId: razorpayOrder.id,
+      paymentStatus: "PENDING",
       total: total,
     },
     include: {
@@ -74,9 +117,17 @@ export const createOrder: any = async (req: Request, res: Response) => {
     where: { cartId },
   });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, newOrder, "Order created successfully"));
+  return res.json(
+    new ApiResponse(
+      201,
+      {
+        order: newOrder,
+        razorpayOrder,
+        key: process.env.RAZORPAY_KEY_ID, // send to frontend
+      },
+      "Order created successfully"
+    )
+  );
 };
 
 export const getAllOrders: any = async (req: Request, res: Response) => {

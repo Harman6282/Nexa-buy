@@ -114,6 +114,7 @@ export const getAllOrdersAdmin: any = async (req: Request, res: Response) => {
     id: o.id,
     name: o?.user?.name,
     email: o?.user?.email,
+    paymentStatus: o?.paymentStatus,
     items: o?.items,
     total: o?.total,
     status: o?.status,
