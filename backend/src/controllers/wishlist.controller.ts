@@ -55,9 +55,6 @@ export const getWishlist = async (
 ): Promise<void> => {
   try {
     const userId = (req?.user as JwtPayload)?.id;
-
-    console.log("first");
-
     const wishlist = await prisma.wishlist.findMany({
       where: { userId },
       include: {

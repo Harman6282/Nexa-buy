@@ -19,7 +19,6 @@ const uploadOnCloudinary = async (localFilePath: string) => {
   if (!localFilePath) {
     throw new ApiError(400, "Image is required");
   }
-  console.log("localfilepath", localFilePath);
   try {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
@@ -27,7 +26,6 @@ const uploadOnCloudinary = async (localFilePath: string) => {
       timeout: 60000,
     });
 
-    console.log("response: ", response);
 
     fs.unlinkSync(localFilePath); // delete after successful upload
     return response;

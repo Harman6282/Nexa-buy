@@ -62,7 +62,6 @@ export const deleteCategory: any = (req: Request, res: Response) => {
 export const updateOrderStatus: any = async (req: Request, res: Response) => {
   const { id: orderId } = req.params;
   const { status } = req.body;
-  console.log(status);
 
   if (!status) {
     throw new ApiError(400, "Status is required");
