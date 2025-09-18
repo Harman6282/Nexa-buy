@@ -28,14 +28,12 @@ const uploadOnCloudinary = (localFilePath) => __awaiter(void 0, void 0, void 0, 
     if (!localFilePath) {
         throw new apiError_1.ApiError(400, "Image is required");
     }
-    console.log("localfilepath", localFilePath);
     try {
         const response = yield cloudinary_1.v2.uploader.upload(localFilePath, {
             resource_type: "auto",
             folder: "images",
             timeout: 60000,
         });
-        console.log("response: ", response);
         fs_1.default.unlinkSync(localFilePath); // delete after successful upload
         return response;
     }

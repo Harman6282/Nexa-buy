@@ -69,7 +69,6 @@ exports.deleteCategory = deleteCategory;
 const updateOrderStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id: orderId } = req.params;
     const { status } = req.body;
-    console.log(status);
     if (!status) {
         throw new apiError_1.ApiError(400, "Status is required");
     }
@@ -117,6 +116,7 @@ const getAllOrdersAdmin = (req, res) => __awaiter(void 0, void 0, void 0, functi
             id: o.id,
             name: (_a = o === null || o === void 0 ? void 0 : o.user) === null || _a === void 0 ? void 0 : _a.name,
             email: (_b = o === null || o === void 0 ? void 0 : o.user) === null || _b === void 0 ? void 0 : _b.email,
+            paymentStatus: o === null || o === void 0 ? void 0 : o.paymentStatus,
             items: o === null || o === void 0 ? void 0 : o.items,
             total: o === null || o === void 0 ? void 0 : o.total,
             status: o === null || o === void 0 ? void 0 : o.status,

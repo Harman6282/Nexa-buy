@@ -22,7 +22,7 @@ const __1 = require("..");
 const cloudinary_1 = require("../utils/cloudinary");
 const cache_1 = require("../utils/cache");
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("createProduct called");
+    // Parse variants if sent as string
     if (typeof req.body.variants === "string") {
         try {
             req.body.variants = JSON.parse(req.body.variants);
@@ -31,40 +31,27 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             throw new apiError_1.ApiError(400, "Invalid JSON format for 'variants'");
         }
     }
+    // Validate input
     const parsed = products_1.CreateProductSchema.safeParse(req.body);
     if (!parsed.success) {
         throw new apiError_1.ApiError(400, parsed.error.errors[0].message, parsed.error.errors.map((error) => error.path[0] + ": " + error.message));
     }
     const { name, description, price, brand, discount, categoryName, variants } = parsed.data;
-    // upload images
+    // Get uploaded files
     const files = req.files;
-    // if (!files || files.length === 0) {
-    //   throw new ApiError(400, "At least one product image is required");
-    // }
-    const uploadedImages = [];
-    if (files) {
-        for (const file of files) {
-            const result = yield (0, cloudinary_1.uploadOnCloudinary)(file.path);
-            uploadedImages.push({
-                url: result.secure_url,
-                publicId: result.public_id,
-            });
-        }
-    }
-    let finalImages = uploadedImages;
-    // If no files uploaded, check for image URLs in req.body.imageUrls
-    if ((!files || files.length === 0) && Array.isArray(req.body.imageUrls)) {
-        finalImages = req.body.imageUrls
-            .filter((url) => typeof url === "string" && url.trim() !== "")
-            .map((url) => ({
-            url,
-            publicId: null,
-        }));
-    }
-    // If still no images, throw error
-    if (!finalImages || finalImages.length === 0) {
+    if (!files || files.length === 0) {
         throw new apiError_1.ApiError(400, "At least one product image is required");
     }
+    // Upload each file to Cloudinary
+    const uploadedImages = [];
+    for (const file of files) {
+        const result = yield (0, cloudinary_1.uploadOnCloudinary)(file.path);
+        uploadedImages.push({
+            url: result.secure_url,
+            publicId: result.public_id,
+        });
+    }
+    // Create product with uploaded images
     const slug = (0, slugify_1.default)(name, { replacement: "-", lower: true }) + "-" + (0, nanoid_1.nanoid)(8);
     const product = yield __1.prisma.product.create({
         data: {
@@ -76,7 +63,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             slug,
             categoryName,
             images: {
-                create: finalImages,
+                create: uploadedImages,
             },
             variants: {
                 create: variants,
@@ -89,7 +76,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
     return res
         .status(200)
-        .json(new apiResponse_1.ApiResponse(200, product, "product created successfully"));
+        .json(new apiResponse_1.ApiResponse(200, product, "Product created successfully"));
 });
 exports.createProduct = createProduct;
 const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -97,19 +84,60 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!productId) {
         throw new apiError_1.ApiError(401, "Enter valid product Id");
     }
-    const body = req.body;
-    const product = yield __1.prisma.product.update({
-        where: {
-            id: productId,
-        },
-        data: Object.assign({}, body),
-    });
-    if (!product) {
-        throw new apiError_1.ApiError(404, "Product not found");
+    const { name, description, price, brand, discount, categoryName, variants } = req.body;
+    try {
+        const result = yield __1.prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            // 1. Update product
+            const product = yield tx.product.update({
+                where: { id: productId },
+                data: {
+                    name,
+                    description,
+                    price,
+                    discount,
+                    brand,
+                    categoryName,
+                },
+            });
+            if (!product)
+                throw new apiError_1.ApiError(404, "Product not found");
+            // 2. Get existing variants from DB
+            const existingVariants = yield tx.productVariant.findMany({
+                where: { productId },
+            });
+            const incomingIds = variants
+                .filter((v) => v.id)
+                .map((v) => v.id);
+            const existingIds = existingVariants.map((v) => v.id);
+            // 3. Delete variants that are missing in the request
+            const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
+            if (toDelete.length > 0) {
+                yield tx.productVariant.deleteMany({
+                    where: { id: { in: toDelete } },
+                });
+            }
+            // 4. Upsert variants (update existing, create new)
+            const updatedVariants = yield Promise.all(variants.map((v) => v.id
+                ? tx.productVariant.update({
+                    where: { id: v.id },
+                    data: { size: v.size, stock: v.stock },
+                })
+                : tx.productVariant.create({
+                    data: { size: v.size, stock: v.stock, productId },
+                })));
+            if (!updatedVariants) {
+                throw new apiError_1.ApiError(404, "Failed to update variants while updating product");
+            }
+            return { product, variants: updatedVariants };
+        }));
+        return res
+            .status(200)
+            .json(new apiResponse_1.ApiResponse(200, result, "Product updated successfully"));
     }
-    return res
-        .status(200)
-        .json(new apiResponse_1.ApiResponse(200, product, "product updated successfully"));
+    catch (error) {
+        console.error(error);
+        throw new apiError_1.ApiError(500, "Something went wrong while updating product");
+    }
 });
 exports.updateProduct = updateProduct;
 const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -152,7 +180,6 @@ const collectionProducts = (req, res) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.collectionProducts = collectionProducts;
 const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("getProductById called");
     const { id: productId } = req.params;
     if (!productId) {
         throw new apiError_1.ApiError(401, "Enter valid product Id");
@@ -281,7 +308,6 @@ const getProductsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, fu
             variants: true,
         },
     });
-    console.log(products);
     if (!products || []) {
         throw new apiError_1.ApiError(404, "No products of this category found");
     }

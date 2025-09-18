@@ -57,7 +57,6 @@ const getWishlist = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     var _a;
     try {
         const userId = (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.id;
-        console.log("first");
         const wishlist = yield __1.prisma.wishlist.findMany({
             where: { userId },
             include: {

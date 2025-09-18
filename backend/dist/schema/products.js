@@ -9,11 +9,14 @@ exports.CreateProductSchema = zod_1.z.object({
     discount: zod_1.z.coerce.number().default(0),
     brand: (0, zod_1.string)().min(1, "Product brand is required"),
     categoryName: (0, zod_1.string)().min(1, "Product category is required"),
-    imageUrls: zod_1.z.array((0, zod_1.string)()).nonempty("At least one image URL is required").optional(),
+    imageUrls: zod_1.z
+        .array((0, zod_1.string)())
+        .nonempty("At least one image URL is required")
+        .optional(),
     variants: zod_1.z
         .array(zod_1.z.object({
         size: zod_1.z.string().min(1),
-        stock: zod_1.z.number().int().nonnegative(),
+        stock: zod_1.z.coerce.number().int().nonnegative(),
     }))
         .nonempty("At least one variant is required"),
 });

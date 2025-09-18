@@ -1,0 +1,13 @@
+services:
+  backend:
+    image: harmanxze/nexa-backend:v2
+    container_name: nexa-backend-server
+    ports:
+      - "3001:3001"
+    networks:
+      - nexa-network
+    env_file: .env
+
+networks:
+  nexa-network:
+    driver: bridge

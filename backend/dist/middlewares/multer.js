@@ -6,12 +6,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.upload = void 0;
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const storage = multer_1.default.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "public/temp");
+        const uploadPath = path_1.default.join(__dirname, "..", "public", "temp");
+        if (!fs_1.default.existsSync(uploadPath)) {
+            fs_1.default.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
-        cb(null, file.originalname);
+        cb(null, Date.now() + "-" + file.originalname); // prevent overwriting
     },
 });
 function fileFilter(req, file, cb) {

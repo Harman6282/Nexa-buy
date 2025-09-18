@@ -14,22 +14,20 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Request limit exceeded. Please try again later.",
 });
 app.use(limiter);
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://192.168.1.41:3000"],
+    origin: [process.env.FRONTEND_DOMAIN!],
     credentials: true,
   })
 );
 
-export const prisma = new PrismaClient({
-  log: ["query"],
-});
+export const prisma = new PrismaClient();
 
 app.use("/api", rootRouter);
 
