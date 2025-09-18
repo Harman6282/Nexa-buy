@@ -7,9 +7,10 @@ import { PrismaClient } from "@prisma/client";
 import errorHandler from "./middlewares/errorHandler";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 
 const app = express();
+app.set("trust proxy", 1);
+import rateLimit from "express-rate-limit";
 
 app.use(express.json());
 app.use(cookieParser());

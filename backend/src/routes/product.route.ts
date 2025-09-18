@@ -31,7 +31,7 @@ productRoutes.delete(
   [authenticate, adminCheck],
   asyncHandler(deleteProduct)
 );
-productRoutes.get("/collection", asyncHandler(collectionProducts))
+productRoutes.get("/collection", asyncHandler(collectionProducts));
 productRoutes.get("/search", asyncHandler(getProductsByQuery));
 productRoutes.get("/:id", asyncHandler(getProductById));
 productRoutes.get("/", asyncHandler(getAllProducts));
