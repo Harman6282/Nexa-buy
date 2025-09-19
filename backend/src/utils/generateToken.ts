@@ -16,9 +16,12 @@ export const generateToken: any = (user: any, res: Response) => {
   );
 
   res.cookie("accessToken", token, {
-    maxAge: 15 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
+    secure: true,
+    sameSite: "none",
+    domain: ".harmanxze.com",
+    path: "/",
+    maxAge: 15 * 24 * 60 * 60 * 1000,
   });
 };
 

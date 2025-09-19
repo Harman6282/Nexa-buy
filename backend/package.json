@@ -7,7 +7,7 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "prisma:generate": "prisma generate",
-    "docker-publish": "npx prisma generate && docker build -t harmanxze/nexa-backend:v3 --platform linux/amd64 . && docker push harmanxze/nexa-backend:v3"
+    "docker-publish": "npx prisma generate && docker build -t harmanxze/nexa-backend:v2 --platform linux/amd64 . && docker push harmanxze/nexa-backend:v2"
   },
   "keywords": [],
   "author": "",
